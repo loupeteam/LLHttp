@@ -4,7 +4,7 @@
 	{
 #endif
 
-#include "HTTPComm.h"
+#include "LLHttp.h"
 #include "picohttpparser.h"
 #include "HttpUtility.h"
 

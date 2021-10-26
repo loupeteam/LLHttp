@@ -15,7 +15,7 @@
 	{
 #endif
 
-#include "HTTPComm.h"
+#include "LLHttp.h"
 
 #ifdef __cplusplus
 	};

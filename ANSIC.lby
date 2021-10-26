@@ -4,7 +4,7 @@
   <Files>
     <File Description="Exported data types">Types.typ</File>
     <File Description="Exported constants">Constants.var</File>
-    <File Description="Exported functions and function blocks">HTTPComm.fun</File>
+    <File Description="Exported functions and function blocks">LLHttp.fun</File>
     <File>picohttpparser.h</File>
     <File>picohttpparser.c</File>
     <File>HttpSocket.c</File>
