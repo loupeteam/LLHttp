@@ -1,0 +1,39 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [        
+        {
+			"name": "D path",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/Path/build/path.exe",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}/Path/build",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"miDebuggerPath": "C:\\Program Files\\mingw-w64\\x86_64-6.3.0-posix-seh-rt_v5-rev2\\mingw64\\bin\\gdb.exe",			
+			"visualizerFile": "${workspaceFolder}/eigen.natvis",
+			"showDisplayString": true,			
+		},
+        {
+			"name": "D path 32",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/Path/build/path.exe",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}/Path/build",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "gdb",
+			"miDebuggerPath": "C:/MinGW/bin/gdb.exe",			
+			"visualizerFile": "${workspaceFolder}/eigen.natvis",
+			"showDisplayString": true,			
+		}
+		
+    ]
+}

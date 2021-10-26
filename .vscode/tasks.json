@@ -1,0 +1,20 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build AS Headers",
+            "command": "C:/BrAutomation/AS410/Bin-en/BR.AS.Build.exe",
+            "args": [
+                "${workspaceFolder}/../as/build.apj",
+                "-X"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },   
+    ],
+    "version": "2.0.0"
+}
