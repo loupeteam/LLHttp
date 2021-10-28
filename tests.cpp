@@ -17,6 +17,12 @@ using namespace std;
 void test_uriMatch(void);
 int test_all();
 
+inline constexpr unsigned char operator "" _uchar( unsigned long long arg ) noexcept
+{
+    return static_cast< unsigned char >( arg );
+}
+
+
 int test_all()
 {
     test_uriMatch();
@@ -25,45 +31,49 @@ int test_all()
 }
 
 void test_uriMatch(void) {
-    #define testHttpUriMatch(a,b) printf("\033[0mChecking URI Match: Selctor: \033[0;33m%s\033[0m, uri: \033[0;33m%s\033[0m, is a match? %s\n", a, b, (HttpUriMatch((UDINT)a, (UDINT)b) ? "\033[0;32mtrue" : "\033[0;31mfalse"))
+    #define testHttpUriMatch(a,b,c) \
+    ({\
+    typeof(c) r = HttpUriMatch((UDINT)a, (UDINT)b); \
+    printf("\033[0mChecking URI Match: Selctor: \033[0;33m%s\033[0m, uri: \033[0;33m%s\033[0m, is a match? %s%s\n", a, b, (c==r?"\033[0;32m":"\033[0;31m"), (r ? "true" : "false")); \
+    })
     
-    testHttpUriMatch("/files/*", "/files/");
-    testHttpUriMatch("/files/*", "/files/test");
-    testHttpUriMatch("/files/*", "/files/test.cpp");
-    testHttpUriMatch("/files/*", "/files/deeper/");
-    testHttpUriMatch("/files/*", "/files/deeper/test.cpp");
-    testHttpUriMatch("/files/*", "/other");
-    testHttpUriMatch("/files/*", "/");
+    testHttpUriMatch("/files/*", "/files/", 1_uchar);
+    testHttpUriMatch("/files/*", "/files/test", 1_uchar);
+    testHttpUriMatch("/files/*", "/files/test.cpp", 1_uchar);
+    testHttpUriMatch("/files/*", "/files/deeper/", 0_uchar);
+    testHttpUriMatch("/files/*", "/files/deeper/test.cpp", 0_uchar);
+    testHttpUriMatch("/files/*", "/other", 0_uchar);
+    testHttpUriMatch("/files/*", "/", 0_uchar);
 
     printf("\033[0m\n");
 
-    testHttpUriMatch("/files/*/", "/files/");
-    testHttpUriMatch("/files/*/", "/files/test");
-    testHttpUriMatch("/files/*/", "/files/test.cpp");
-    testHttpUriMatch("/files/*/", "/files/deeper/");
-    testHttpUriMatch("/files/*/", "/files/deeper/test.cpp");
-    testHttpUriMatch("/files/*/", "/other");
-    testHttpUriMatch("/files/*/", "/");
+    testHttpUriMatch("/files/*/", "/files/", 0_uchar);
+    testHttpUriMatch("/files/*/", "/files/test", 0_uchar);
+    testHttpUriMatch("/files/*/", "/files/test.cpp", 0_uchar);
+    testHttpUriMatch("/files/*/", "/files/deeper/", 1_uchar);
+    testHttpUriMatch("/files/*/", "/files/deeper/test.cpp", 0_uchar);
+    testHttpUriMatch("/files/*/", "/other", 0_uchar);
+    testHttpUriMatch("/files/*/", "/", 0_uchar);
 
     printf("\033[0m\n");
 
-    testHttpUriMatch("/files/**", "/files/");
-    testHttpUriMatch("/files/**", "/files/test");
-    testHttpUriMatch("/files/**", "/files/test.cpp");
-    testHttpUriMatch("/files/**", "/files/deeper/");
-    testHttpUriMatch("/files/**", "/files/deeper/test.cpp");
-    testHttpUriMatch("/files/**", "/other");
-    testHttpUriMatch("/files/**", "/");
+    testHttpUriMatch("/files/**", "/files/", 1_uchar);
+    testHttpUriMatch("/files/**", "/files/test", 1_uchar);
+    testHttpUriMatch("/files/**", "/files/test.cpp", 1_uchar);
+    testHttpUriMatch("/files/**", "/files/deeper/", 1_uchar);
+    testHttpUriMatch("/files/**", "/files/deeper/test.cpp", 1_uchar);
+    testHttpUriMatch("/files/**", "/other", 0_uchar);
+    testHttpUriMatch("/files/**", "/", 0_uchar);
 
     printf("\033[0m\n");
 
-    testHttpUriMatch("/files/test.cpp", "/files/");
-    testHttpUriMatch("/files/test.cpp", "/files/test");
-    testHttpUriMatch("/files/test.cpp", "/files/test.cpp");
-    testHttpUriMatch("/files/test.cpp", "/files/deeper/");
-    testHttpUriMatch("/files/test.cpp", "/files/deeper/test.cpp");
-    testHttpUriMatch("/files/test.cpp", "/other");
-    testHttpUriMatch("/files/test.cpp", "/");
+    testHttpUriMatch("/files/test.cpp", "/files/", 0);
+    testHttpUriMatch("/files/test.cpp", "/files/test", 0);
+    testHttpUriMatch("/files/test.cpp", "/files/test.cpp", 1);
+    testHttpUriMatch("/files/test.cpp", "/files/deeper/", 0);
+    testHttpUriMatch("/files/test.cpp", "/files/deeper/test.cpp", 0);
+    testHttpUriMatch("/files/test.cpp", "/other", 0);
+    testHttpUriMatch("/files/test.cpp", "/", 0);
 
     printf("\033[0m\n");
 
