@@ -71,12 +71,13 @@ plcbit HttpUriMatch(unsigned long _a, unsigned long _b) {
 			while(*b != '/' && *b != '\0') b++;
 		}
 		if(*a != *b) return 0;
+		if(!*a || !*b) return 1; 
 		
 		a++;
 		b++;
 	}
 	
-	return 1;
+	return (*a == *b);
 }
 
 plcbit HttpAddHandler(unsigned long _ident, unsigned long pHandler) {
