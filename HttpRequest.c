@@ -1,10 +1,10 @@
-#include <bur/plctypes.h>
+
 #ifdef __cplusplus
 	extern "C"
 	{
 #endif
 
-#include "LLHttp.h"
+#include "LLHttpH.h"
 
 #ifdef __cplusplus
 	};
@@ -26,7 +26,7 @@ void successCallback(HttpRequest_typ* t, HttpServiceLink_typ* api, HttpHeader_ty
 			t->contentLength = t->header.contentLength;
 			if(content) {
 				unsigned long length = MIN(t->header.contentLength, t->responseSize);
-				if(t->pResponse) memcpy(t->pResponse, content, length);
+				if(t->pResponse) memcpy((void*)t->pResponse, (void*)content, length);
 			}
 		}
 	}
@@ -62,8 +62,8 @@ void HttpRequest(HttpRequest_typ* t) {
 		request.method = t->method;
 		request.pPayload = t->pContent;
 		request.payloadLength = t->contentLength;
-		request.successCallback = &successCallback;
-		request.errorCallback = &errorCallback;
+		request.successCallback = (UDINT)&successCallback;
+		request.errorCallback = (UDINT)&errorCallback;
 		
 		len = MIN(sizeof(request.userHeader)/sizeof(request.userHeader[0]), t->numUserHeaders);
 		if(t->pUserHeader) {

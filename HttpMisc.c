@@ -9,13 +9,12 @@
  * Implementation of library HTTPComm
  ********************************************************************/
 
-#include <bur/plctypes.h>
 #ifdef __cplusplus
 	extern "C"
 	{
 #endif
 
-#include "LLHttp.h"
+#include "LLHttpH.h"
 
 #ifdef __cplusplus
 	};
@@ -81,32 +80,32 @@ plcbit HttpUriMatch(unsigned long _a, unsigned long _b) {
 }
 
 plcbit HttpAddHandler(unsigned long _ident, unsigned long pHandler) {
-	HttpServiceLink_typ* ident = _ident;
-	HttpHandler_typ* handler = pHandler;
+	HttpServiceLink_typ* ident = (HttpServiceLink_typ*)_ident;
+	HttpHandler_typ* handler = (HttpHandler_typ*)pHandler;
 	
 	if(!ident || !handler) return 1;
 	
 	if(HttpHandlerIndex(_ident, pHandler) == -1) {
-		BufferAddToTop(&ident->handlers, handler);
+		BufferAddToTop((UDINT)&ident->handlers, (UDINT)handler);
 	}
 	
 	return 0;
 }
 	
 plcbit HttpRemoveHandler(unsigned long _ident, unsigned long pHandler) {
-	HttpServiceLink_typ* ident = _ident;
-	HttpHandler_typ* handler = pHandler;
+	HttpServiceLink_typ* ident = (HttpServiceLink_typ*)_ident;
+	HttpHandler_typ* handler = (HttpHandler_typ*)pHandler;
 	
 	if(!ident || !handler) return 1;
 	
-	HttpHandler_typ* handlerToRemove = pHandler;
+	HttpHandler_typ* handlerToRemove = (HttpHandler_typ*)pHandler;
 	HttpHandler_typ* handle;
 	signed long i = HttpHandlerIndex(_ident, pHandler);
 	unsigned int status;
 	
 	if(i >= 0) {
 		// TODO: Status handling for errors
-		BufferRemoveOffset(&ident->handlers, i, status);
+		BufferRemoveOffset((UDINT)&ident->handlers, i, status);
 	}
 	
 	return 0;

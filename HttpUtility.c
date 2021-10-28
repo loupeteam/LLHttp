@@ -9,13 +9,12 @@
  * Implementation of library HTTPComm
  ********************************************************************/
 
-#include <bur/plctypes.h>
 #ifdef __cplusplus
 	extern "C"
 	{
 #endif
 
-#include "LLHttp.h"
+#include "LLHttpH.h"
 
 #ifdef __cplusplus
 	};
@@ -28,7 +27,7 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-void getMethodString(unsigned int method, unsigned int dest, unsigned int destSize) {
+void getMethodString(signed long method, unsigned long dest, unsigned long destSize) {
 	switch (method)
 	{
 		case HTTP_METHOD_GET: stringlcpy(dest, "GET", destSize); break;
@@ -46,15 +45,15 @@ void getMethodString(unsigned int method, unsigned int dest, unsigned int destSi
 }
 
 unsigned int parseMethodString(unsigned long method, unsigned long methodlen) {
-	if(strncasecmp("GET", method, methodlen) == 0) return HTTP_METHOD_GET;
-	if(strncasecmp("HEAD", method, methodlen) == 0) return HTTP_METHOD_HEAD;
-	if(strncasecmp("POST", method, methodlen) == 0) return HTTP_METHOD_POST;
-	if(strncasecmp("PUT", method, methodlen) == 0) return HTTP_METHOD_PUT;
-	if(strncasecmp("DELETE", method, methodlen) == 0) return HTTP_METHOD_DELETE;
-	if(strncasecmp("CONNECT", method, methodlen) == 0) return HTTP_METHOD_CONNECT;
-	if(strncasecmp("OPTIONS", method, methodlen) == 0) return HTTP_METHOD_OPTIONS;
-	if(strncasecmp("TRACE", method, methodlen) == 0) return HTTP_METHOD_TRACE;
-	if(strncasecmp("PATCH", method, methodlen) == 0) return HTTP_METHOD_PATCH;
+	if(strncasecmp("GET", (char*)method, methodlen) == 0) return HTTP_METHOD_GET;
+	if(strncasecmp("HEAD", (char*)method, methodlen) == 0) return HTTP_METHOD_HEAD;
+	if(strncasecmp("POST", (char*)method, methodlen) == 0) return HTTP_METHOD_POST;
+	if(strncasecmp("PUT", (char*)method, methodlen) == 0) return HTTP_METHOD_PUT;
+	if(strncasecmp("DELETE", (char*)method, methodlen) == 0) return HTTP_METHOD_DELETE;
+	if(strncasecmp("CONNECT", (char*)method, methodlen) == 0) return HTTP_METHOD_CONNECT;
+	if(strncasecmp("OPTIONS", (char*)method, methodlen) == 0) return HTTP_METHOD_OPTIONS;
+	if(strncasecmp("TRACE", (char*)method, methodlen) == 0) return HTTP_METHOD_TRACE;
+	if(strncasecmp("PATCH", (char*)method, methodlen) == 0) return HTTP_METHOD_PATCH;
 	return HTTP_METHOD_DEFAULT;
 }
 
@@ -152,7 +151,33 @@ void copyHeaderLine(HttpHeaderLine_typ* dest, struct phr_header* src) {
 	dest->name[index] = '\0';
 	length = MIN(sizeof(dest->value)-1, src->value_len);
 	for (index = 0; index < length; index++) {
-		dest->value[index] = tolower(src->value[index]);
+		dest->value[index] = src->value[index];//tolower(src->value[index]);
 	}
 	dest->value[index] = '\0';
 }
+
+signed long HttpHandlerIndex(unsigned long _ident, unsigned long pHandler) {
+	HttpServiceLink_typ* ident = (HttpServiceLink_typ*)_ident;
+	HttpHandler_typ* handler = (HttpHandler_typ*)pHandler;
+	
+	if(!ident || !handler) return 1;
+	
+	HttpHandler_typ* handlerToRemove = (HttpHandler_typ*)pHandler;
+	HttpHandler_typ* handle;
+	unsigned long i;
+	unsigned int status;
+	
+	for (i = 0; i < ident->handlers.NumberValues; i++) {
+		// TODO: Status handling for errors
+		handler = (HttpHandler_typ*)BufferGetItemAdr((UDINT)&ident->handlers, i, (UDINT)&status);
+		
+		// Compare to see if they are the same
+		if(handler->self == handlerToRemove->self
+		&& strcmp(handler->uri, handlerToRemove->uri) == 0) {
+			return i;
+		}
+	}
+	
+	return -1;
+}
+

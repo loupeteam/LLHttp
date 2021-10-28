@@ -1,10 +1,10 @@
-#include <bur/plctypes.h>
+
 #ifdef __cplusplus
 	extern "C"
 	{
 #endif
 
-#include "LLHttp.h"
+#include "LLHttpH.h"
 
 #ifdef __cplusplus
 	};

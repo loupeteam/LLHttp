@@ -9,16 +9,25 @@
  * Implementation of library HTTPComm
  ********************************************************************/
 
-#include <bur/plctypes.h>
 #ifdef __cplusplus
 	extern "C"
 	{
 #endif
 
-#include "LLHttp.h"
+#include "LLHttpH.h"
 
 #ifdef __cplusplus
 	};
+#endif
+
+#ifndef TMP_alloc
+#define TMP_alloc(s, l) 0;*(l) = (UDINT)malloc(s)
+#endif
+#ifndef TMP_free
+#define TMP_free(s, l) 0;free((void*)l)
+#endif
+#ifndef brsitoa
+#define brsitoa(a,b) strlen(itoa(a,(char*)b,10))
 #endif
 
 #include "HttpUtility.h"
@@ -350,7 +359,11 @@ signed long HttpBuildResponse(unsigned long data, unsigned long _response, unsig
 	
 	// Date
 	utcGetTime.enable = 1;
+	#ifndef _NOT_BR
 	UtcDTGetTime(&utcGetTime);
+	#else
+	utcGetTime.DT1 = time(NULL); utcGetTime.status = 0;
+	#endif
 	strcat(dest, "Date: ");
 	generateHttpTimestamp(temp, sizeof(temp), utcGetTime.DT1, 1); 
 	strcat(dest, temp);
@@ -402,29 +415,5 @@ signed long HttpBuildResponse(unsigned long data, unsigned long _response, unsig
 	return 0;
 }
 
-signed long HttpHandlerIndex(unsigned long _ident, unsigned long pHandler) {
-	HttpServiceLink_typ* ident = _ident;
-	HttpHandler_typ* handler = pHandler;
-	
-	if(!ident || !handler) return 1;
-	
-	HttpHandler_typ* handlerToRemove = pHandler;
-	HttpHandler_typ* handle;
-	unsigned long i;
-	unsigned int status;
-	
-	for (i = 0; i < ident->handlers.NumberValues; i++) {
-		// TODO: Status handling for errors
-		handler = (HttpHandler_typ*)BufferGetItemAdr(&ident->handlers, i, &status);
-		
-		// Compare to see if they are the same
-		if(handler->self == handlerToRemove->self
-		&& strcmp(handler->uri, handlerToRemove->uri) == 0) {
-			return i;
-		}
-	}
-	
-	return -1;
-}
 
 

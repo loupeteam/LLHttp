@@ -9,16 +9,43 @@
  * Implementation of library HTTPComm
  ********************************************************************/
 
-#include <bur/plctypes.h>
 #ifdef __cplusplus
 	extern "C"
 	{
 #endif
 
-#include "LLHttp.h"
+#include "LLHttpH.h"
 
 #ifdef __cplusplus
 	};
+#endif
+
+#ifndef brsitoa
+#define brsitoa(a,b) strlen(itoa(a,(char*)b,10))
+#endif
+#ifndef clock_ms
+#include "time.h"
+#define clock_ms() (clock()/CLOCKS_PER_SEC*1000)
+#endif
+#ifndef TON
+	void TON(TON_typ* t)
+	{
+		if (t->IN)
+		{
+			if (t->StartTime == 0)
+			{
+				t->StartTime = clock_ms();
+			}
+			t->ET = clock_ms() - t->StartTime;
+			t->Q = (t->ET >= t->PT);
+		}
+		else
+		{
+			t->ET = 0;
+			t->Q = 0;
+			t->StartTime = 0;
+		}
+	}
 #endif
 
 #include "HttpUtility.h"
@@ -114,7 +141,7 @@ void HttpClient(HttpClient_typ* t) {
 			/////////////////
 		
 			// Add block
-			getMethodString(t->internal.currentRequest.method, t->internal.rawSendData, sizeof(t->internal.rawSendData));
+			getMethodString(t->internal.currentRequest.method, (UDINT)&t->internal.rawSendData, sizeof(t->internal.rawSendData));
 			strcat(t->internal.rawSendData, " ");
 			if(t->internal.currentRequest.uri[0] != '/') strcat(t->internal.rawSendData, "/");
 			strcat(t->internal.rawSendData, t->internal.currentRequest.uri);

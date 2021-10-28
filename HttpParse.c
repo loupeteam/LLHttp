@@ -1,10 +1,10 @@
-#include <bur/plctypes.h>
+
 #ifdef __cplusplus
 	extern "C"
 	{
 #endif
 
-#include "LLHttp.h"
+#include "LLHttpH.h"
 #include "picohttpparser.h"
 #include "HttpUtility.h"
 
@@ -14,8 +14,83 @@
 
 
 #include <string.h>
+#include "stdlib.h"
+#include "stdio.h"
+
+#ifndef brsitoa
+#define brsitoa(a,b) strlen(itoa(a,(char*)b,10))
+#endif
+#ifndef brsftoa
+#include "math.h"
+// Reverses a string 'str' of length 'len'
+void reverse(char* str, int len)
+{
+    int i = 0, j = len - 1, temp;
+    while (i < j) {
+        temp = str[i];
+        str[i] = str[j];
+        str[j] = temp;
+        i++;
+        j--;
+    }
+}
+  
+// Converts a given integer x to string str[]. 
+// d is the number of digits required in the output. 
+// If d is more than the number of digits in x, 
+// then 0s are added at the beginning.
+int intToStr(int x, char str[], int d)
+{
+    int i = 0;
+    while (x) {
+        str[i++] = (x % 10) + '0';
+        x = x / 10;
+    }
+  
+    // If number of digits required is more, then
+    // add 0s at the beginning
+    while (i < d)
+        str[i++] = '0';
+  
+    reverse(str, i);
+    str[i] = '\0';
+    return i;
+}
+  
+// Converts a floating-point/double number to a string.
+size_t ftoa(float n, char* res, int afterpoint)
+{
+    // Extract integer part
+    int ipart = (int)n;
+  
+    // Extract floating part
+    float fpart = n - (float)ipart;
+  
+    // convert integer part to string
+    int i = intToStr(ipart, res, 0);
+  
+    // check for display option after point
+    if (afterpoint != 0) {
+        res[i] = '.'; // add dot
+  
+        // Get the value of fraction part upto given no.
+        // of points after dot. The third parameter 
+        // is needed to handle cases like 233.007
+        fpart = fpart * pow(10, afterpoint);
+  
+        intToStr((int)fpart, res + i + 1, afterpoint);
+    }
+
+	return strlen(res);
+}
+#define brsftoa(a,b) ftoa(a,(char*)b,14)
+#endif
+#ifndef brsatoi
+#define brsatoi(a) atoi((char*)a)
+#endif
 
 #define min(a,b) (((a)<(b))?(a):(b))
+
 
 // TODO: header can have duplicate names, handle this in the future but not important yet
 
@@ -35,7 +110,7 @@ void HttpParse(HttpParse_typ* t) {
 		t->partialPacket = 1;
 		return;
 	}
-	if(memcmp(t->data, "HTTP", 4) == 0) {
+	if(memcmp((void*)t->data, "HTTP", 4) == 0) {
 		int minor_version, returnValue, status, numHeaders;
 		size_t statusStringLen;
 		struct phr_header headerLines[HTTP_MAI_NUM_HEADER_LINES+3] = {};
@@ -43,7 +118,7 @@ void HttpParse(HttpParse_typ* t) {
 		
 		numHeaders = sizeof(headerLines)/sizeof(headerLines[0]);
 		
-		returnValue = phr_parse_response(t->data, t->dataLength, &t->header.version, &t->header.status, &statusString, &statusStringLen, headerLines, &numHeaders, 0);
+		returnValue = phr_parse_response((char*)t->data, t->dataLength, &t->header.version, &t->header.status, &statusString, &statusStringLen, headerLines, &numHeaders, 0);
 		switch (returnValue) {
 			case 0:
 			default:
@@ -100,7 +175,7 @@ void HttpParse(HttpParse_typ* t) {
 		char *method, *path;
 		struct phr_header headerLines[HTTP_MAI_NUM_HEADER_LINES+3] = {};
 		numHeaders = sizeof(headerLines)/sizeof(headerLines[0]);
-		returnValue = phr_parse_request(t->data, t->dataLength, &method, &methodlen, &path, &pathlen, &t->header.version, headerLines, &numHeaders, 0);
+		returnValue = phr_parse_request((char*)t->data, t->dataLength, (const char**)&method, &methodlen, &path, &pathlen, &t->header.version, headerLines, &numHeaders, 0);
 		switch (returnValue) {
 			case 0:
 			default:
