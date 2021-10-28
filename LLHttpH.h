@@ -9,12 +9,12 @@ extern "C"
 #define __asm__(x) //x
 // In this case we are building outside BR
 #include "bur.h"
-#include "AsTCP.h"
-#include "RingBufLib.h"
-#include "StringExt.h"
-#include "standard.h"
-
+// #include "AsTCP.h"
+// #include "RingBufLib.h"
+// #include "StringExt.h"
+// #include "standard.h"
 #endif
+
 #include <bur/plctypes.h>
 #include "LLHttp.h"
 #ifdef _NOT_BR
