@@ -7,7 +7,6 @@ project(LLHttp)
 file(GLOB LLHttp_SRC
 "*.cpp"
 "*.c"
-"/test/*.cpp"
 )
 
 # add_compile_options(-fpermissive -Wno-write-strings)
@@ -23,6 +22,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/../inclu
 #if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MYPROJECT_BUILD_TESTING))
     #enable_testing()
     #add_subdirectory(test)
+    
     add_executable(LLHttp_test ${LLHttp_SRC})
 
     target_include_directories(LLHttp_test PUBLIC ${PROJECT_SOURCE_DIR}/../includes/)
