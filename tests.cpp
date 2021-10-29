@@ -3,6 +3,7 @@ extern "C" {
 #endif
 
 #include "LLHttpH.h"
+#include "HttpUtility.h"
 
 #ifdef __cplusplus
 }
@@ -16,6 +17,7 @@ using namespace std;
 
 void test_uriMatch(void);
 void test_parse(void);
+void test_utility(void);
 int test_all();
 
 inline constexpr unsigned char operator "" _uchar( unsigned long long arg ) noexcept
@@ -28,6 +30,7 @@ int test_all()
 {
     test_uriMatch();
     test_parse();
+    test_utility();
     /* code */
     return 0;
 }
@@ -87,7 +90,7 @@ void test_parse(void) {
 
     #define ParseTest(x) parser.data = (UDINT)x;parser.dataLength = strlen((char*)parser.data);printf("\033[0mParse test, parsing message: %s\n", x);HttpParse(&parser);
     #define Expect(x, y) if(x != y) printf("\033[0;31mExpected %s (%i) to be %s\n", #x, x, #y); else printf("%s = %s. test passed...\n", #x, #y);
-    #define ExpectStrcmp(x, y) if(strcmp(x,y)) printf("\033[0;31mExpected %s (%s) to be %s\n", #x, x, #y); else printf("%s = %s. test passed...\n", #x, #y);
+    #define ExpectStrcmp(x, y) if(strcmp(x,y)) printf("\033[0;31mExpected %s (%s) to be %s\n\033[0m", #x, x, #y); else printf("%s = %s. test passed...\n", #x, #y);
 
     ParseTest("GET / HTTP/1.0\r\n");
     Expect(parser.error, 0);
@@ -112,6 +115,34 @@ void test_parse(void) {
     #undef ParserTest
     #undef Expect
     #undef ExpectStrcmp
+}
+
+void test_utility() {
+    char dest[250] = {};
+    #define getMethodStringTest(m, str) getMethodString(m, (UDINT)&dest, sizeof(dest)); if(strcmp(str, dest)) printf("Test getMethodString: %s \033[0;31mError Expect: %s, Got: %s\033[0m\n", #m, str, dest); else printf("Test getMethodString: %s complete\n", str);
+    getMethodStringTest(HTTP_METHOD_GET, "GET");
+    getMethodStringTest(HTTP_METHOD_PUT, "PUT");
+    getMethodStringTest(HTTP_METHOD_POST, "POST");
+    getMethodStringTest(HTTP_METHOD_DELETE, "DELETE");
+    getMethodStringTest(HTTP_METHOD_HEAD, "HEAD");
+    getMethodStringTest(HTTP_METHOD_OPTIONS, "OPTIONS");
+    getMethodStringTest(HTTP_METHOD_PATCH, "PATCH");
+    getMethodStringTest(HTTP_METHOD_TRACE, "TRACE");
+    #undef getMethodStringTest
+
+    #define getMethodFromStringTest(mexpt, mstr) \
+    ({\
+    DINT m = parseMethodString((UDINT)mstr, strlen(mstr)); if(m != mexpt) printf("Test parseMethodString: %s \033[0;31mError Expect: %s (%s), Got: %s\033[0m\n", #mstr, mexpt, #mexpt, m); else printf("Test parseMethodString: %s complete\n", mstr);\
+    })
+    getMethodFromStringTest(HTTP_METHOD_GET, "GET");
+    getMethodFromStringTest(HTTP_METHOD_PUT, "PUT");
+    getMethodFromStringTest(HTTP_METHOD_POST, "POST");
+    getMethodFromStringTest(HTTP_METHOD_DELETE, "DELETE");
+    getMethodFromStringTest(HTTP_METHOD_HEAD, "HEAD");
+    getMethodFromStringTest(HTTP_METHOD_OPTIONS, "OPTIONS");
+    getMethodFromStringTest(HTTP_METHOD_PATCH, "PATCH");
+    getMethodFromStringTest(HTTP_METHOD_TRACE, "TRACE");
+    #undef getMethodFromStringTest
 }
 
 int main(int argc, char const *argv[])
