@@ -15,6 +15,7 @@ extern "C" {
 using namespace std;
 
 void test_uriMatch(void);
+void test_parse(void);
 int test_all();
 
 inline constexpr unsigned char operator "" _uchar( unsigned long long arg ) noexcept
@@ -26,6 +27,7 @@ inline constexpr unsigned char operator "" _uchar( unsigned long long arg ) noex
 int test_all()
 {
     test_uriMatch();
+    test_parse();
     /* code */
     return 0;
 }
@@ -78,6 +80,38 @@ void test_uriMatch(void) {
     printf("\033[0m\n");
 
     #undef testHttpUriMatch
+}
+
+void test_parse(void) {
+    HttpParse_typ parser = {};
+
+    #define ParseTest(x) parser.data = (UDINT)x;parser.dataLength = strlen((char*)parser.data);printf("\033[0mParse test, parsing message: %s\n", x);HttpParse(&parser);
+    #define Expect(x, y) if(x != y) printf("\033[0;31mExpected %s (%i) to be %s\n", #x, x, #y); else printf("%s = %s. test passed...\n", #x, #y);
+    #define ExpectStrcmp(x, y) if(strcmp(x,y)) printf("\033[0;31mExpected %s (%s) to be %s\n", #x, x, #y); else printf("%s = %s. test passed...\n", #x, #y);
+
+    ParseTest("GET / HTTP/1.0\r\n");
+    Expect(parser.error, 0);
+    Expect(parser.header.method, HTTP_METHOD_GET);
+    ExpectStrcmp(parser.header.uri, "/");
+
+    ParseTest("HTTP/1.0 200 OK\r\ncontent-length: 6\r\ncontent-type: text\r\n\r\nsimple");
+    Expect(parser.error, 0);
+    Expect(parser.contentPresent, 1);
+    Expect(parser.header.contentLength, 6);
+    ExpectStrcmp((char*)parser.content, "simple");
+    ExpectStrcmp((char*)parser.header.contentType, "text");
+
+    ParseTest("HTTP/1.0 200 OK\r\ncustom-header: 1\r\n\r");
+    Expect(parser.error, 0);
+    Expect(parser.contentPresent, 0);
+    Expect(parser.header.status, 200);
+    ExpectStrcmp(parser.header.lines[0].name, "custom-header");
+    ExpectStrcmp(parser.header.lines[0].value, "1");
+    
+
+    #undef ParserTest
+    #undef Expect
+    #undef ExpectStrcmp
 }
 
 int main(int argc, char const *argv[])
