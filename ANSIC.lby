@@ -16,6 +16,9 @@
     <File>HttpUtility.h</File>
     <File>HttpUtility.c</File>
     <File>HttpMisc.c</File>
+    <File>LLHttpH.h</File>
+    <File>tests.cpp</File>
+	<File>heap.cpp</File>
   </Files>
   <Dependencies>
     <Dependency ObjectName="TCPComm" />
