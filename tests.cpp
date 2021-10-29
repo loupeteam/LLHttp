@@ -33,7 +33,7 @@ int test_all()
 void test_uriMatch(void) {
     #define testHttpUriMatch(a,b,c) \
     ({\
-    typeof(c) r = HttpUriMatch((UDINT)a, (UDINT)b); \
+    unsigned char r = HttpUriMatch((UDINT)a, (UDINT)b); \
     printf("\033[0mChecking URI Match: Selctor: \033[0;33m%s\033[0m, uri: \033[0;33m%s\033[0m, is a match? %s%s\n", a, b, (c==r?"\033[0;32m":"\033[0;31m"), (r ? "true" : "false")); \
     })
     
