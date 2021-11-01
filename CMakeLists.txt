@@ -14,42 +14,12 @@ add_definitions(-D_BUR_FORMAT_BRELF)
 add_definitions(-D_REPLACE_CONST)
 
 add_library(${PROJECT_NAME} ${LLHttp_SRC})
+enable_testing ()
+add_subdirectory (test)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/../includes/)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/../includes/loupe/Includes/)
 
-
-#if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MYPROJECT_BUILD_TESTING))
-    #enable_testing()
-    #add_subdirectory(test)
-    Include(FetchContent)
-
-    FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v3.0.0-preview3
-    )
-
-    FetchContent_MakeAvailable(Catch2)
-    add_executable(LLHttp_test ${LLHttp_SRC})
-    target_link_libraries(LLHttp_test PRIVATE Catch2::Catch2WithMain)
-    list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-    include(CTest)
-    include(Catch)
-    catch_discover_tests(LLHttp_test OUTPUT_DIR report)
-
-    target_include_directories(LLHttp_test PUBLIC ${PROJECT_SOURCE_DIR}/../includes/)
-    target_include_directories(LLHttp_test PUBLIC ${PROJECT_SOURCE_DIR}/../includes/loupe/Includes/)
-
-
-    set_target_properties( LLHttp_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/ )
-    #add_test(NAME testAll COMMAND test)
-#endif()
-
 target_link_libraries(LLHttp PUBLIC TCPComm)
 target_link_libraries(LLHttp PUBLIC StringExt)
 target_link_libraries(LLHttp PUBLIC RingBufLib)
-
-target_link_libraries(LLHttp_test PUBLIC TCPComm)
-target_link_libraries(LLHttp_test PUBLIC StringExt)
-target_link_libraries(LLHttp_test PUBLIC RingBufLib)
