@@ -35,11 +35,11 @@ plcbit HttpStatus_getDescription(signed short code, unsigned long dest) {
 	return 0;
 }
 
-plcbit HttpMethodMatch(HttpMethod_enum a, HttpMethod_enum b) {
-	return (a == b || a == HTTP_METHOD_ANY || b == HTTP_METHOD_ANY);
+plcbit HttpMethodMatch(LLHttpMethod_enum a, LLHttpMethod_enum b) {
+	return (a == b || a == LLHTTP_METHOD_ANY || b == LLHTTP_METHOD_ANY);
 }
 
-plcbit HttpUriMatch(unsigned long _a, unsigned long _b) {
+plcbit LLHttpUriMatch(unsigned long _a, unsigned long _b) {
 	if(!_a || !_b) return 0;
 	//if(strcmp(_a, "*") == 0) return 1;
 	//if(strcmp(_a, _b) == 0) return 1;
@@ -80,28 +80,28 @@ plcbit HttpUriMatch(unsigned long _a, unsigned long _b) {
 	return (*a == *b);
 }
 
-plcbit HttpAddHandler(unsigned long _ident, unsigned long pHandler) {
-	HttpServiceLink_typ* ident = (HttpServiceLink_typ*)_ident;
-	HttpHandler_typ* handler = (HttpHandler_typ*)pHandler;
+plcbit LLHttpAddHandler(unsigned long _ident, unsigned long pHandler) {
+	LLHttpServiceLink_typ* ident = (LLHttpServiceLink_typ*)_ident;
+	LLHttpHandler_typ* handler = (LLHttpHandler_typ*)pHandler;
 	
 	if(!ident || !handler) return 1;
 	
-	if(HttpHandlerIndex(_ident, pHandler) == -1) {
+	if(LLHttpHandlerIndex(_ident, pHandler) == -1) {
 		BufferAddToTop((UDINT)&ident->handlers, (UDINT)handler);
 	}
 	
 	return 0;
 }
 	
-plcbit HttpRemoveHandler(unsigned long _ident, unsigned long pHandler) {
-	HttpServiceLink_typ* ident = (HttpServiceLink_typ*)_ident;
-	HttpHandler_typ* handler = (HttpHandler_typ*)pHandler;
+plcbit LLHttpRemoveHandler(unsigned long _ident, unsigned long pHandler) {
+	LLHttpServiceLink_typ* ident = (LLHttpServiceLink_typ*)_ident;
+	LLHttpHandler_typ* handler = (LLHttpHandler_typ*)pHandler;
 	
 	if(!ident || !handler) return 1;
 	
-	HttpHandler_typ* handlerToRemove = (HttpHandler_typ*)pHandler;
-	HttpHandler_typ* handle;
-	signed long i = HttpHandlerIndex(_ident, pHandler);
+	LLHttpHandler_typ* handlerToRemove = (LLHttpHandler_typ*)pHandler;
+	LLHttpHandler_typ* handle;
+	signed long i = LLHttpHandlerIndex(_ident, pHandler);
 	unsigned int status;
 	
 	if(i >= 0) {

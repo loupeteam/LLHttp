@@ -15,7 +15,7 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-void successCallback(HttpRequest_typ* t, HttpServiceLink_typ* api, HttpHeader_typ* header, unsigned long content) {
+void successCallback(LLHttpRequest_typ* t, LLHttpServiceLink_typ* api, LLHttpHeader_typ* header, unsigned long content) {
 	if(t) {
 		t->internal.error = 0;
 		t->internal.done  = 1;
@@ -32,7 +32,7 @@ void successCallback(HttpRequest_typ* t, HttpServiceLink_typ* api, HttpHeader_ty
 	}
 }
 
-void errorCallback(HttpRequest_typ* t, HttpServiceLink_typ* api, HttpHeader_typ* header, unsigned long content) {
+void errorCallback(LLHttpRequest_typ* t, LLHttpServiceLink_typ* api, LLHttpHeader_typ* header, unsigned long content) {
 	if(t) {
 		t->internal.error = 1;
 		t->internal.done = 0;
@@ -49,14 +49,14 @@ void errorCallback(HttpRequest_typ* t, HttpServiceLink_typ* api, HttpHeader_typ*
 	}
 }
 
-void HttpRequest(HttpRequest_typ* t) {
+void LLHttpRequest(LLHttpRequest_typ* t) {
 	// TODO: Check for invalid ident
 	if(!t || t->ident == 0) return;
 	
-	HttpServiceLink_typ* ident = t->ident;
+	LLHttpServiceLink_typ* ident = t->ident;
 	if(t->send && !t->internal.send) {
 		unsigned long i, len;
-		HttpServiceRequest_typ request = {};
+		LLHttpServiceRequest_typ request = {};
 		request.self = (UDINT)t;
 		strcpy(request.uri, t->uri);
 		request.method = t->method;
@@ -67,7 +67,7 @@ void HttpRequest(HttpRequest_typ* t) {
 		
 		len = MIN(sizeof(request.userHeader)/sizeof(request.userHeader[0]), t->numUserHeaders);
 		if(t->pUserHeader) {
-			HttpHeaderLine_typ* headerLine = t->pUserHeader;
+			LLHttpHeaderLine_typ* headerLine = t->pUserHeader;
 			for (i = 0; i < len; i++) {
 				strcpy(request.userHeader[i].name, headerLine[i].name);
 				strcpy(request.userHeader[i].value, headerLine[i].value);

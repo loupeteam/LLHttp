@@ -7,7 +7,7 @@
     <File Description="Exported functions and function blocks">LLHttp.fun</File>
     <File>picohttpparser.h</File>
     <File>picohttpparser.c</File>
-    <File>HttpSocket.c</File>
+    <File>HttpClient.c</File>
     <File>HttpServer.c</File>
     <File>HttpRequest.c</File>
     <File>HttpResponse.c</File>
@@ -17,7 +17,6 @@
     <File>HttpUtility.c</File>
     <File>HttpMisc.c</File>
     <File>LLHttpH.h</File>
-    <File>tests.cpp</File>
 	<File>heap.cpp</File>
   </Files>
   <Dependencies>

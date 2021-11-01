@@ -51,17 +51,17 @@
 #include "HttpUtility.h"
 #include <string.h>
 
-void httpShiftReceivePointer(HttpClient_typ* t, unsigned long bytes) {
+void httpShiftReceivePointer(LLHttpClient_typ* t, unsigned long bytes) {
 	t->internal.tcpStream.IN.PAR.pReceiveData += bytes;
 	t->internal.tcpStream.IN.PAR.MaxReceiveLength -= bytes; // TODO: Dont allow rollover
 }
-void httpResetReceivePointer(HttpClient_typ* t) {
+void httpResetReceivePointer(LLHttpClient_typ* t) {
 	t->internal.tcpStream.IN.PAR.pReceiveData = &t->internal.rawrecvData[0];
 	t->internal.bufferSize = sizeof(t->internal.rawrecvData); // this is only here becuase rawrecvData is not dynamic alloc yet
 	t->internal.tcpStream.IN.PAR.MaxReceiveLength = t->internal.bufferSize;
 }
 
-void HttpClientSetError(HttpClient_typ* t, HttpErr_enum errorId) {
+void HttpClientSetError(LLHttpClient_typ* t, LLHttpErr_enum errorId) {
 #ifdef debug_checks
 	if(!t) return 0;
 #endif
@@ -70,9 +70,9 @@ void HttpClientSetError(HttpClient_typ* t, HttpErr_enum errorId) {
 	t->errorId = errorId;
 }
 
-void HttpClient(HttpClient_typ* t) {
+void LLHttpClient(LLHttpClient_typ* t) {
 	
-	HttpCallback pCallback;
+	LLHttpCallback pCallback;
 	char temp[25] = {};
 	
 	t->internal.bufferSize = sizeof(t->internal.tempBuffer);
@@ -81,7 +81,7 @@ void HttpClient(HttpClient_typ* t) {
 		strcpy(t->internal.tcpMgr.IN.CFG.LocalIPAddress, t->localIPAddress);
 		t->internal.tcpMgr.IN.CFG.LocalPort = t->localPort;
 		strcpy(t->internal.tcpMgr.IN.CFG.RemoteIPAddress, t->hostname);
-		t->internal.tcpMgr.IN.CFG.RemotePort = t->port ? t->port : t->https ? HTTP_HTTPS_PORT : HTTP_HTTP_PORT;;
+		t->internal.tcpMgr.IN.CFG.RemotePort = t->port ? t->port : t->https ? LLHTTP_HTTPS_PORT : LLHTTP_HTTP_PORT;;
 		
 		// TODO: This needs to be more dynamic
 		t->internal.tcpMgr.IN.CFG.SendBufferSize = t->internal.bufferSize;
@@ -115,7 +115,7 @@ void HttpClient(HttpClient_typ* t) {
 	TCPStreamReceive(&t->internal.tcpStream);
 	
 	switch (t->internal.state) {
-		case HTTP_ST_IDLE:
+		case LLHTTP_ST_IDLE:
 			
 			if(t->internal.api.requestBuffer.NumberValues > 0) {
 				if(t->internal.tcpStream.OUT.Active) {
@@ -124,7 +124,7 @@ void HttpClient(HttpClient_typ* t) {
 		
 					t->internal.retries = 0;
 				
-					t->internal.state = HTTP_ST_HEADER;
+					t->internal.state = LLHTTP_ST_HEADER;
 				}
 				else {
 					break;
@@ -135,7 +135,7 @@ void HttpClient(HttpClient_typ* t) {
 				break;
 			}
 
-		case HTTP_ST_HEADER:
+		case LLHTTP_ST_HEADER:
 			
 			// Build Header
 			/////////////////
@@ -190,7 +190,7 @@ void HttpClient(HttpClient_typ* t) {
 			}
 			memset(((UDINT)&t->internal.rawSendData)+sendLength, 0, 1);
 		
-		case HTTP_ST_SEND:
+		case LLHTTP_ST_SEND:
 			t->internal.tcpStream.IN.CMD.Send = 1;
 			t->internal.tcpStream.IN.PAR.pSendData = &t->internal.rawSendData;
 			t->internal.tcpStream.IN.PAR.SendLength = sendLength;
@@ -200,9 +200,9 @@ void HttpClient(HttpClient_typ* t) {
 			
 			httpResetReceivePointer(t);
 			
-			t->internal.state = HTTP_ST_LISTEN;
+			t->internal.state = LLHTTP_ST_LISTEN;
 		
-		case HTTP_ST_LISTEN:
+		case LLHTTP_ST_LISTEN:
 			// Wait for response
 			if(t->internal.tcpStream.OUT.DataReceived) {
 				if (t->internal.tcpStream.OUT.ReceivedDataLength == 0) {
@@ -210,10 +210,10 @@ void HttpClient(HttpClient_typ* t) {
 					t->internal.tcpStream.IN.CMD.Receive = 0;
 					t->internal.tcpStream.IN.CMD.Close = 1;
 					
-					t->internal.state = HTTP_ST_ERROR;
+					t->internal.state = LLHTTP_ST_ERROR;
 				}
 				else {
-					t->internal.state = HTTP_ST_PARSE;
+					t->internal.state = LLHTTP_ST_PARSE;
 				
 					t->internal.tcpStream.IN.CMD.AcknowledgeData = 1;
 				
@@ -223,14 +223,14 @@ void HttpClient(HttpClient_typ* t) {
 				}
 			}
 			else if(t->internal.responseTimeout.Q) {
-				if(t->internal.retries > HTTP_MAX_RETRIES) {
+				if(t->internal.retries > LLHTTP_MAX_RETRIES) {
 					// TODO: Maybe make this configurable
 					// TODO: Then error if we do not get a response
-					t->internal.state = HTTP_ST_ERROR;
+					t->internal.state = LLHTTP_ST_ERROR;
 				}
 				else {
 					// TODO: Time out, then try again a few times
-					t->internal.state = HTTP_ST_SEND;
+					t->internal.state = LLHTTP_ST_SEND;
 				}
 			}
 			
@@ -238,30 +238,30 @@ void HttpClient(HttpClient_typ* t) {
 			
 			t->internal.responseTimeout.IN = 1;
 			
-			if(t->internal.state != HTTP_ST_PARSE)
+			if(t->internal.state != LLHTTP_ST_PARSE)
 				break;
 		
-		case HTTP_ST_PARSE:
+		case LLHTTP_ST_PARSE:
 			// TODO: Parse message into header and payload
 			t->internal.parser.data = t->internal.rawrecvData;
 			t->internal.parser.dataLength = t->internal.recvLength;
-			HttpParse(&t->internal.parser);
+			LLHttpParse(&t->internal.parser);
 			
-			if(t->internal.parser.partialPacket || (t->internal.parser.partialContent && t->internal.currentRequest.method != HTTP_METHOD_HEAD)) {
+			if(t->internal.parser.partialPacket || (t->internal.parser.partialContent && t->internal.currentRequest.method != LLHTTP_METHOD_HEAD)) {
 				// Handle partial packet
 				// Shift pointer 
 				httpShiftReceivePointer(t, t->internal.recvLength);
 				
 				t->internal.responseTimeout.IN = 0;
-				t->internal.state = HTTP_ST_LISTEN;
+				t->internal.state = LLHTTP_ST_LISTEN;
 			}
 			else if(t->internal.parser.error) {
 				HttpClientSetError(t, t->internal.parser.errorId);
-				t->internal.state = HTTP_ST_ERROR;
+				t->internal.state = LLHTTP_ST_ERROR;
 			
 			}
 			else{
-				if(HttpHeaderContains(&t->internal.parser.header.lines, "connection", "close")) {
+				if(LLHttpHeaderContains(&t->internal.parser.header.lines, "connection", "close")) {
 					t->internal.tcpStream.IN.CMD.Close = 1;
 				}
 			
@@ -271,23 +271,23 @@ void HttpClient(HttpClient_typ* t) {
 					pCallback(t->internal.currentRequest.self, &t->internal.api, &t->internal.parser.header, t->internal.parser.content);
 				}
 				
-				t->internal.state = HTTP_ST_CLEAN;
+				t->internal.state = LLHTTP_ST_CLEAN;
 			}
 			
-			if(t->internal.state != HTTP_ST_CLEAN)
+			if(t->internal.state != LLHTTP_ST_CLEAN)
 				break;
 		
-		case HTTP_ST_CLEAN:
-			t->internal.state = HTTP_ST_IDLE;
+		case LLHTTP_ST_CLEAN:
+			t->internal.state = LLHTTP_ST_IDLE;
 			break;
 		
-		case HTTP_ST_ERROR:
+		case LLHTTP_ST_ERROR:
 		default:
 			if(t->internal.currentRequest.errorCallback) {
 				pCallback = t->internal.currentRequest.errorCallback;
 				pCallback(t->internal.currentRequest.self, &t->internal.api, &t->internal.parser.header, t->internal.parser.content);
 			}
-			t->internal.state = HTTP_ST_CLEAN;
+			t->internal.state = LLHTTP_ST_CLEAN;
 		
 			break;
 	}
@@ -295,8 +295,8 @@ void HttpClient(HttpClient_typ* t) {
 	if(t->internal.tcpStream.OUT.DataReceived && t->internal.tcpStream.OUT.ReceivedDataLength == 0) {
 		t->internal.tcpStream.IN.CMD.Close = 1;
 		
-		if(t->internal.state != HTTP_ST_IDLE) {
-			t->internal.state = HTTP_ST_ERROR;
+		if(t->internal.state != LLHTTP_ST_IDLE) {
+			t->internal.state = LLHTTP_ST_ERROR;
 		}
 	}
 	else if(t->internal.tcpStream.OUT.Error) {
@@ -305,8 +305,8 @@ void HttpClient(HttpClient_typ* t) {
 		t->internal.tcpStream.IN.CMD.AcknowledgeError = 1;
 		
 		
-		if(t->internal.state != HTTP_ST_IDLE) {
-			t->internal.state = HTTP_ST_ERROR;
+		if(t->internal.state != LLHTTP_ST_IDLE) {
+			t->internal.state = LLHTTP_ST_ERROR;
 		}
 	}
 	

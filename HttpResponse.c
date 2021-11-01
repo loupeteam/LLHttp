@@ -15,7 +15,7 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-void onNewMessageCallback(HttpResponse_typ* t, HttpServiceLink_typ* api, HttpHeader_typ* header, unsigned long content) {
+void onNewMessageCallback(LLHttpResponse_typ* t, LLHttpServiceLink_typ* api, LLHttpHeader_typ* header, unsigned long content) {
 	if(t) {
 		t->requestLength = header->contentLength;
 		memcpy(&t->requestHeader, header, sizeof(t->requestHeader));
@@ -29,7 +29,7 @@ void onNewMessageCallback(HttpResponse_typ* t, HttpServiceLink_typ* api, HttpHea
 	}
 }
 
-void responseSuccessCallback(HttpResponse_typ* t, HttpServiceLink_typ* api, HttpHeader_typ* header, unsigned long content) {
+void responseSuccessCallback(LLHttpResponse_typ* t, LLHttpServiceLink_typ* api, LLHttpHeader_typ* header, unsigned long content) {
 	if(t) {
 		t->internal.error = 0;
 		t->internal.done  = 1;
@@ -46,7 +46,7 @@ void responseSuccessCallback(HttpResponse_typ* t, HttpServiceLink_typ* api, Http
 	}
 }
 
-void responseErrorCallback(HttpResponse_typ* t, HttpServiceLink_typ* api, HttpHeader_typ* header, unsigned long content) {
+void responseErrorCallback(LLHttpResponse_typ* t, LLHttpServiceLink_typ* api, LLHttpHeader_typ* header, unsigned long content) {
 	if(t) {
 		t->internal.error = 1;
 		t->internal.done = 0;
@@ -63,11 +63,11 @@ void responseErrorCallback(HttpResponse_typ* t, HttpServiceLink_typ* api, HttpHe
 	}
 }
 
-void HttpResponse(HttpResponse_typ* t) {
+void LLHttpResponse(LLHttpResponse_typ* t) {
 	// TODO: Check for invalid ident
 	if(!t || t->ident == 0) return;
 	
-	HttpServiceLink_typ* ident = t->ident;
+	LLHttpServiceLink_typ* ident = t->ident;
 	
 	if(t->enable && !t->internal.initialized) {
 		// Cmd to Listen but not listening yet
@@ -77,13 +77,13 @@ void HttpResponse(HttpResponse_typ* t) {
 		strcpy(t->internal.handler.uri, t->uri);
 		t->internal.handler.newMessageCallback = &onNewMessageCallback;
 		
-		HttpAddHandler(t->ident, &t->internal.handler);
+		LLHttpAddHandler(t->ident, &t->internal.handler);
 		t->internal.initialized = 1;
 	}
 	else if(!t->enable && t->internal.initialized) {
 		// Cmd to stop not listen but still listening
 		
-		HttpRemoveHandler(t->ident, &t->internal.handler);
+		LLHttpRemoveHandler(t->ident, &t->internal.handler);
 		t->internal.initialized = 0;
 	}
 	else if(t->enable) {
@@ -93,7 +93,7 @@ void HttpResponse(HttpResponse_typ* t) {
 		if(t->send && !t->internal.send) {
 			
 			unsigned long i, len;
-			HttpServiceResponse_typ response = {};
+			LLHttpServiceResponse_typ response = {};
 			response.self = (UDINT)t;
 			strcpy(response.uri, t->uri);
 			response.status = t->status;
@@ -105,7 +105,7 @@ void HttpResponse(HttpResponse_typ* t) {
 			
 			len = MIN(sizeof(response.userHeader)/sizeof(response.userHeader[0]), t->numUserHeaders);
 			if(t->pUserHeader) {
-				HttpHeaderLine_typ* headerLine = t->pUserHeader;
+				LLHttpHeaderLine_typ* headerLine = t->pUserHeader;
 				for (i = 0; i < len; i++) {
 					strcpy(response.userHeader[i].name, headerLine[i].name);
 					strcpy(response.userHeader[i].value, headerLine[i].value);

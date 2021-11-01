@@ -22,7 +22,7 @@ extern "C" {
 using namespace std;
 
 TEST_CASE( "Test HTTP URI Match", "[LLHttp]" ) {
-	#define testHttpUriMatch(a,b,c) CHECK(HttpUriMatch((UDINT)a, (UDINT)b) == c)
+	#define testHttpUriMatch(a,b,c) CHECK(LLHttpUriMatch((UDINT)a, (UDINT)b) == c)
 	
 	SECTION( "Should match single wildcard at end of path" ) {
 
@@ -73,14 +73,14 @@ TEST_CASE( "Test HTTP URI Match", "[LLHttp]" ) {
 }
 
 TEST_CASE( "Test HTTP Parser", "[LLHttp]" ) {
-	HttpParse_typ parser = {};
+	LLHttpParse_typ parser = {};
 
-	#define ParseTest(x) parser.data = (UDINT)x;parser.dataLength = strlen((char*)parser.data);HttpParse(&parser);
+	#define ParseTest(x) parser.data = (UDINT)x;parser.dataLength = strlen((char*)parser.data);LLHttpParse(&parser);
 
 	SECTION( "Parse simple request with no body and no header values" ) {
 		ParseTest("GET / HTTP/1.0\r\n\r\n");
 		CHECK(parser.error == false);
-		CHECK(parser.header.method == HTTP_METHOD_GET);
+		CHECK(parser.header.method == LLHTTP_METHOD_GET);
 		REQUIRE_THAT(parser.header.uri, Catch::Matchers::Equals("/"));
 	}
 
@@ -145,27 +145,27 @@ TEST_CASE( "Test HTTP Utility FNs", "[LLHttp]" ) {
 
 	SECTION( "Verify return values for getMethodString" ) {
 		#define getMethodStringTest(m, str) getMethodString(m, (UDINT)&dest, sizeof(dest)); CHECK_THAT(dest, Catch::Matchers::Equals(str))
-		getMethodStringTest(HTTP_METHOD_GET, "GET");
-		getMethodStringTest(HTTP_METHOD_PUT, "PUT");
-		getMethodStringTest(HTTP_METHOD_POST, "POST");
-		getMethodStringTest(HTTP_METHOD_DELETE, "DELETE");
-		getMethodStringTest(HTTP_METHOD_HEAD, "HEAD");
-		getMethodStringTest(HTTP_METHOD_OPTIONS, "OPTIONS");
-		getMethodStringTest(HTTP_METHOD_PATCH, "PATCH");
-		getMethodStringTest(HTTP_METHOD_TRACE, "TRACE");
+		getMethodStringTest(LLHTTP_METHOD_GET, "GET");
+		getMethodStringTest(LLHTTP_METHOD_PUT, "PUT");
+		getMethodStringTest(LLHTTP_METHOD_POST, "POST");
+		getMethodStringTest(LLHTTP_METHOD_DELETE, "DELETE");
+		getMethodStringTest(LLHTTP_METHOD_HEAD, "HEAD");
+		getMethodStringTest(LLHTTP_METHOD_OPTIONS, "OPTIONS");
+		getMethodStringTest(LLHTTP_METHOD_PATCH, "PATCH");
+		getMethodStringTest(LLHTTP_METHOD_TRACE, "TRACE");
 		#undef getMethodStringTest
 	}
 
 	SECTION( "Verify return values for parseMethodString" ) {
 		#define getMethodFromStringTest(mexpt, mstr) CHECK(parseMethodString((UDINT)mstr, strlen(mstr)) == mexpt)
-		getMethodFromStringTest(HTTP_METHOD_GET, "GET");
-		getMethodFromStringTest(HTTP_METHOD_PUT, "PUT");
-		getMethodFromStringTest(HTTP_METHOD_POST, "POST");
-		getMethodFromStringTest(HTTP_METHOD_DELETE, "DELETE");
-		getMethodFromStringTest(HTTP_METHOD_HEAD, "HEAD");
-		getMethodFromStringTest(HTTP_METHOD_OPTIONS, "OPTIONS");
-		getMethodFromStringTest(HTTP_METHOD_PATCH, "PATCH");
-		getMethodFromStringTest(HTTP_METHOD_TRACE, "TRACE");
+		getMethodFromStringTest(LLHTTP_METHOD_GET, "GET");
+		getMethodFromStringTest(LLHTTP_METHOD_PUT, "PUT");
+		getMethodFromStringTest(LLHTTP_METHOD_POST, "POST");
+		getMethodFromStringTest(LLHTTP_METHOD_DELETE, "DELETE");
+		getMethodFromStringTest(LLHTTP_METHOD_HEAD, "HEAD");
+		getMethodFromStringTest(LLHTTP_METHOD_OPTIONS, "OPTIONS");
+		getMethodFromStringTest(LLHTTP_METHOD_PATCH, "PATCH");
+		getMethodFromStringTest(LLHTTP_METHOD_TRACE, "TRACE");
 		#undef getMethodFromStringTest
 	}
 }

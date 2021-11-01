@@ -30,31 +30,31 @@
 void getMethodString(signed long method, unsigned long dest, unsigned long destSize) {
 	switch (method)
 	{
-		case HTTP_METHOD_GET: stringlcpy(dest, "GET", destSize); break;
-		case HTTP_METHOD_HEAD: stringlcpy(dest, "HEAD", destSize); break;
-		case HTTP_METHOD_POST: stringlcpy(dest, "POST", destSize); break;
-		case HTTP_METHOD_PUT: stringlcpy(dest, "PUT", destSize); break;
-		case HTTP_METHOD_DELETE: stringlcpy(dest, "DELETE", destSize); break;
-		case HTTP_METHOD_CONNECT: stringlcpy(dest, "CONNECT", destSize); break;
-		case HTTP_METHOD_OPTIONS: stringlcpy(dest, "OPTIONS", destSize); break;
-		case HTTP_METHOD_TRACE: stringlcpy(dest, "TRACE", destSize); break;
-		case HTTP_METHOD_PATCH: stringlcpy(dest, "PATCH", destSize); break;
+		case LLHTTP_METHOD_GET: stringlcpy(dest, "GET", destSize); break;
+		case LLHTTP_METHOD_HEAD: stringlcpy(dest, "HEAD", destSize); break;
+		case LLHTTP_METHOD_POST: stringlcpy(dest, "POST", destSize); break;
+		case LLHTTP_METHOD_PUT: stringlcpy(dest, "PUT", destSize); break;
+		case LLHTTP_METHOD_DELETE: stringlcpy(dest, "DELETE", destSize); break;
+		case LLHTTP_METHOD_CONNECT: stringlcpy(dest, "CONNECT", destSize); break;
+		case LLHTTP_METHOD_OPTIONS: stringlcpy(dest, "OPTIONS", destSize); break;
+		case LLHTTP_METHOD_TRACE: stringlcpy(dest, "TRACE", destSize); break;
+		case LLHTTP_METHOD_PATCH: stringlcpy(dest, "PATCH", destSize); break;
 		default:
 			break;
 	}
 }
 
 unsigned int parseMethodString(unsigned long method, unsigned long methodlen) {
-	if(strncasecmp("GET", (char*)method, methodlen) == 0) return HTTP_METHOD_GET;
-	if(strncasecmp("HEAD", (char*)method, methodlen) == 0) return HTTP_METHOD_HEAD;
-	if(strncasecmp("POST", (char*)method, methodlen) == 0) return HTTP_METHOD_POST;
-	if(strncasecmp("PUT", (char*)method, methodlen) == 0) return HTTP_METHOD_PUT;
-	if(strncasecmp("DELETE", (char*)method, methodlen) == 0) return HTTP_METHOD_DELETE;
-	if(strncasecmp("CONNECT", (char*)method, methodlen) == 0) return HTTP_METHOD_CONNECT;
-	if(strncasecmp("OPTIONS", (char*)method, methodlen) == 0) return HTTP_METHOD_OPTIONS;
-	if(strncasecmp("TRACE", (char*)method, methodlen) == 0) return HTTP_METHOD_TRACE;
-	if(strncasecmp("PATCH", (char*)method, methodlen) == 0) return HTTP_METHOD_PATCH;
-	return HTTP_METHOD_DEFAULT;
+	if(strncasecmp("GET", (char*)method, methodlen) == 0) return LLHTTP_METHOD_GET;
+	if(strncasecmp("HEAD", (char*)method, methodlen) == 0) return LLHTTP_METHOD_HEAD;
+	if(strncasecmp("POST", (char*)method, methodlen) == 0) return LLHTTP_METHOD_POST;
+	if(strncasecmp("PUT", (char*)method, methodlen) == 0) return LLHTTP_METHOD_PUT;
+	if(strncasecmp("DELETE", (char*)method, methodlen) == 0) return LLHTTP_METHOD_DELETE;
+	if(strncasecmp("CONNECT", (char*)method, methodlen) == 0) return LLHTTP_METHOD_CONNECT;
+	if(strncasecmp("OPTIONS", (char*)method, methodlen) == 0) return LLHTTP_METHOD_OPTIONS;
+	if(strncasecmp("TRACE", (char*)method, methodlen) == 0) return LLHTTP_METHOD_TRACE;
+	if(strncasecmp("PATCH", (char*)method, methodlen) == 0) return LLHTTP_METHOD_PATCH;
+	return LLHTTP_METHOD_DEFAULT;
 }
 
 /*! Returns the standard HTTP reason phrase for a HTTP status code.
@@ -142,7 +142,7 @@ const char* HttpStatusPhrase(signed short code)
 
 }
 
-void copyHeaderLine(HttpHeaderLine_typ* dest, struct phr_header* src) {
+void copyHeaderLine(LLHttpHeaderLine_typ* dest, struct phr_header* src) {
 	unsigned long length, index;
 	length = MIN(sizeof(dest->name)-1, src->name_len);
 	for (index = 0; index < length; index++) {
@@ -156,20 +156,20 @@ void copyHeaderLine(HttpHeaderLine_typ* dest, struct phr_header* src) {
 	dest->value[index] = '\0';
 }
 
-signed long HttpHandlerIndex(unsigned long _ident, unsigned long pHandler) {
-	HttpServiceLink_typ* ident = (HttpServiceLink_typ*)_ident;
-	HttpHandler_typ* handler = (HttpHandler_typ*)pHandler;
+signed long LLHttpHandlerIndex(unsigned long _ident, unsigned long pHandler) {
+	LLHttpServiceLink_typ* ident = (LLHttpServiceLink_typ*)_ident;
+	LLHttpHandler_typ* handler = (LLHttpHandler_typ*)pHandler;
 	
 	if(!ident || !handler) return 1;
 	
-	HttpHandler_typ* handlerToRemove = (HttpHandler_typ*)pHandler;
-	HttpHandler_typ* handle;
+	LLHttpHandler_typ* handlerToRemove = (LLHttpHandler_typ*)pHandler;
+	LLHttpHandler_typ* handle;
 	unsigned long i;
 	unsigned int status;
 	
 	for (i = 0; i < ident->handlers.NumberValues; i++) {
 		// TODO: Status handling for errors
-		handler = (HttpHandler_typ*)BufferGetItemAdr((UDINT)&ident->handlers, i, (UDINT)&status);
+		handler = (LLHttpHandler_typ*)BufferGetItemAdr((UDINT)&ident->handlers, i, (UDINT)&status);
 		
 		// Compare to see if they are the same
 		if(handler->self == handlerToRemove->self

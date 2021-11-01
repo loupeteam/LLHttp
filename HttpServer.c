@@ -35,15 +35,15 @@
 
 #define min(a,b) (((a)<(b))?(a):(b))
 
-void HttpShiftReceivePointer(HttpServerInternalClient_typ* client, unsigned long bytes) {
+void HttpShiftReceivePointer(LLHttpServerInternalClient_typ* client, unsigned long bytes) {
 	client->tcpStream.IN.PAR.pReceiveData += bytes;
 	client->tcpStream.IN.PAR.MaxReceiveLength -= bytes; // TODO: Dont allow rollover
 }
-void HttpResetReceivePointer(HttpServerInternalClient_typ* client) {
+void HttpResetReceivePointer(LLHttpServerInternalClient_typ* client) {
 	client->tcpStream.IN.PAR.pReceiveData = client->pReceiveData;
 	client->tcpStream.IN.PAR.MaxReceiveLength = client->receiveDataSize;
 }
-void HttpConnect(HttpServerInternalClient_typ* client, TCPConnection_Desc_typ* connection) {
+void HttpConnect(LLHttpServerInternalClient_typ* client, TCPConnection_Desc_typ* connection) {
 	if(!client || !connection) return;
 	client->connected = 1;
 	memcpy(&client->tcpStream.IN.PAR.Connection, connection, sizeof(client->tcpStream.IN.PAR.Connection));
@@ -57,14 +57,14 @@ void HttpConnect(HttpServerInternalClient_typ* client, TCPConnection_Desc_typ* c
 	HttpResetReceivePointer(client);
 	
 }
-void HttpDisconnect(HttpServerInternalClient_typ* client) {
+void HttpDisconnect(LLHttpServerInternalClient_typ* client) {
 	if(!client) return;
 	client->connected = 0;
 	client->tcpStream.IN.CMD.Close = 1;
 	client->tcpStream.IN.CMD.Receive = 0;
 }
 
-void HttpServerSetError(HttpServer_typ* t, HttpServerInternalClient_typ* client, HttpErr_enum errorId) {
+void HttpServerSetError(LLHttpServer_typ* t, LLHttpServerInternalClient_typ* client, LLHttpErr_enum errorId) {
 	#ifdef debug_checks
 	if(!t || !client) return 0;
 	#endif
@@ -76,25 +76,25 @@ void HttpServerSetError(HttpServer_typ* t, HttpServerInternalClient_typ* client,
 	client->errorId = errorId;
 }
 
-void HttpServerInit(HttpServer_typ* t) {
-	TMP_alloc(sizeof(HttpServerInternalClient_typ)*t->numClients, &t->internal.pClients);
+void LLHttpServerInit(LLHttpServer_typ* t) {
+	TMP_alloc(sizeof(LLHttpServerInternalClient_typ)*t->numClients, &t->internal.pClients);
 	t->internal.numClients = t->numClients;
 	int index;
 	for (index = 0; index < t->internal.numClients; index++) {
 		t->internal.pClients[index];
-		BufferInit(&t->internal.pClients[index].receivedBuffer, 10, sizeof(HttpInternalRequest_typ)+t->bufferSize);
-		BufferInit(&t->internal.pClients[index].sendBuffer, 10, sizeof(HttpInternalRequest_typ)+t->bufferSize);
-		TMP_alloc(sizeof(HttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pCurrentResponse);
-		TMP_alloc(sizeof(HttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pCurrentRequest);
-		TMP_alloc(sizeof(HttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pRecvRequest);
+		BufferInit(&t->internal.pClients[index].receivedBuffer, 10, sizeof(LLHttpInternalRequest_typ)+t->bufferSize);
+		BufferInit(&t->internal.pClients[index].sendBuffer, 10, sizeof(LLHttpInternalRequest_typ)+t->bufferSize);
+		TMP_alloc(sizeof(LLHttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pCurrentResponse);
+		TMP_alloc(sizeof(LLHttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pCurrentRequest);
+		TMP_alloc(sizeof(LLHttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pRecvRequest);
 		
-		TMP_alloc(sizeof(HttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pReceiveData);
-		t->internal.pClients[index].receiveDataSize = sizeof(HttpInternalRequest_typ)+t->bufferSize;
+		TMP_alloc(sizeof(LLHttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pReceiveData);
+		t->internal.pClients[index].receiveDataSize = sizeof(LLHttpInternalRequest_typ)+t->bufferSize;
 		
-		TMP_alloc(sizeof(HttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pSendData);
-		t->internal.pClients[index].sendDataSize = sizeof(HttpInternalRequest_typ)+t->bufferSize;
+		TMP_alloc(sizeof(LLHttpInternalRequest_typ)+t->bufferSize, &t->internal.pClients[index].pSendData);
+		t->internal.pClients[index].sendDataSize = sizeof(LLHttpInternalRequest_typ)+t->bufferSize;
 		
-		BufferInit(&t->internal.pClients[index].api.responseBuffer, 10, sizeof(HttpServiceResponse_typ));
+		BufferInit(&t->internal.pClients[index].api.responseBuffer, 10, sizeof(LLHttpServiceResponse_typ));
 	}
 	
 	
@@ -102,23 +102,23 @@ void HttpServerInit(HttpServer_typ* t) {
 	
 	//t->internal.pClients->api;
 	
-	BufferInit(&t->internal.api.handlers, 50, sizeof(HttpHandler_typ));
+	BufferInit(&t->internal.api.handlers, 50, sizeof(LLHttpHandler_typ));
 	
 	t->internal.initialized = 1;
 }
 
-void HttpServer(HttpServer_typ* t) {
+void LLHttpServer(LLHttpServer_typ* t) {
 	int i;
-	HttpServerInternalClient_typ* client;
-	HttpCallback pCallback;
+	LLHttpServerInternalClient_typ* client;
+	LLHttpCallback pCallback;
 	
 	if(!t) return;
 	
-	if(!t->internal.initialized) HttpServerInit(t);
+	if(!t->internal.initialized) LLHttpServerInit(t);
 	
 	if(t->enable) {
 		strcpy(t->internal.tcpMgr.IN.CFG.LocalIPAddress, t->ipAddress);
-		t->internal.tcpMgr.IN.CFG.LocalPort = t->port ? t->port : t->https ? HTTP_HTTPS_PORT : HTTP_HTTP_PORT; // Readablilty ??
+		t->internal.tcpMgr.IN.CFG.LocalPort = t->port ? t->port : t->https ? LLHTTP_HTTPS_PORT : LLHTTP_HTTP_PORT; // Readablilty ??
 		// No need to populate remote IP and port as we are a server :)
 		t->internal.tcpMgr.IN.CFG.UseSSL = t->https;
 		t->internal.tcpMgr.IN.CFG.SSLCertificate = t->sslIndex;
@@ -160,7 +160,7 @@ void HttpServer(HttpServer_typ* t) {
 		//if(!client->connected) continue; // We dont do anything on client not connected
 		if(client->connected) t->internal.numClientsConnected++; // Each connected client adds to num connected
 		
-		HttpInternalRequest_typ data;
+		LLHttpInternalRequest_typ data;
 		
 		TCPStreamReceive(&client->tcpStream);
 		if(client->tcpStream.OUT.DataReceived) {
@@ -174,7 +174,7 @@ void HttpServer(HttpServer_typ* t) {
 				// TODO: Parse 
 				client->parser.data = client->pReceiveData;
 				client->parser.dataLength = client->recvLength;
-				HttpParse(&client->parser);
+				LLHttpParse(&client->parser);
 				
 				// TODO: Check for partial packet
 				if(client->parser.partialPacket || (client->parser.partialContent)) { // TODO: We should handle expect: 100
@@ -215,13 +215,13 @@ void HttpServer(HttpServer_typ* t) {
 		// If we can push out new command
 		if(client->receivedBuffer.NumberValues > 0 && !client->requestActive) {
 			BufferCopyItems(&client->receivedBuffer, 0, 1, client->pCurrentRequest, &client->bufferStatus);
-			HttpHandler_typ* handler;
+			LLHttpHandler_typ* handler;
 			unsigned long numMatches = 0;
 			// Check if the handlers for this topic is availible 
 			for (i = 0; i < t->internal.api.handlers.NumberValues; i++) {
 				handler = BufferGetItemAdr(&t->internal.api.handlers, i, &client->bufferStatus);
 				// TODO: Check busy
-				if(HttpMethodMatch(handler->method, client->pCurrentRequest->header.method) && HttpUriMatch(handler->uri, client->pCurrentRequest->header.uri)) {
+				if(LLHttpMethodMatch(handler->method, client->pCurrentRequest->header.method) && LLHttpUriMatch(handler->uri, client->pCurrentRequest->header.uri)) {
 					handler->client = client;
 					numMatches++;
 					pCallback = handler->newMessageCallback;
@@ -234,7 +234,7 @@ void HttpServer(HttpServer_typ* t) {
 				for (i = 0; i < t->internal.api.handlers.NumberValues; i++) {
 					handler = BufferGetItemAdr(&t->internal.api.handlers, i, &client->bufferStatus);
 					// TODO: Check busy
-					if(handler->method == HTTP_METHOD_DEFAULT && HttpUriMatch(handler->uri, client->pCurrentRequest->header.uri)) {
+					if(handler->method == LLHTTP_METHOD_DEFAULT && LLHttpUriMatch(handler->uri, client->pCurrentRequest->header.uri)) {
 						handler->client = client;
 						numMatches++;
 						pCallback = handler->newMessageCallback;
@@ -254,7 +254,7 @@ void HttpServer(HttpServer_typ* t) {
 		
 		// Call active request
 		//		if(client->requestActive) {
-		//			HttpHandler_typ* handler;
+		//			LLHttpHandler_typ* handler;
 		//			// Check if the handlers for this topic is availible 
 		//			for (i = 0; i < t->internal.handlers.NumberValues; i++) {
 		//				handler = BufferGetItemAdr(&t->internal.handlers, i, status);
@@ -274,7 +274,7 @@ void HttpServer(HttpServer_typ* t) {
 				BufferRemoveTop(&client->api.responseBuffer);
 				
 				// Build Packet
-				if(HttpBuildResponse(client->pSendData, client->pCurrentResponse, client->sendDataSize, &client->tcpStream.IN.PAR.SendLength) == 0) {
+				if(LLHttpBuildResponse(client->pSendData, client->pCurrentResponse, client->sendDataSize, &client->tcpStream.IN.PAR.SendLength) == 0) {
 					client->tcpStream.IN.CMD.Send = 1;
 
 					client->tcpStream.IN.PAR.SendLength = strlen(client->pSendData);
@@ -337,11 +337,11 @@ unsigned long appendNewLine(char* dest) {
 	return strlen(dest);
 }
 
-signed long HttpBuildResponse(unsigned long data, unsigned long _response, unsigned long dataSize, unsigned long pLen) {
+signed long LLHttpBuildResponse(unsigned long data, unsigned long _response, unsigned long dataSize, unsigned long pLen) {
 	char* dest = (char*)data;
 	char temp[30];
 	int i;
-	HttpServiceResponse_typ* response = _response;
+	LLHttpServiceResponse_typ* response = _response;
 	unsigned long destLen = 0;
 	UtcDTGetTime_typ utcGetTime = {};
 	

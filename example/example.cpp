@@ -17,11 +17,11 @@ using namespace std;
 int main(int argc, char const *argv[]) {
 	printf("This is an example");
 
-	HttpParse_typ parser = {};
+	LLHttpParse_typ parser = {};
 
 	parser.data = (UDINT)&"HTTP/1.0 200 OK\r\ncustom-header: 1\r\n\r\n";
 	parser.dataLength = strlen((char*)parser.data);
-	HttpParse(&parser);
+	LLHttpParse(&parser);
 
 	/* code */
 	return 0;

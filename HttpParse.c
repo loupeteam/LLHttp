@@ -94,7 +94,7 @@ size_t ftoa(float n, char* res, int afterpoint)
 
 // TODO: header can have duplicate names, handle this in the future but not important yet
 
-void HttpParse(HttpParse_typ* t) {
+void LLHttpParse(LLHttpParse_typ* t) {
 	if(!t->data) return;
 	
 	// Reset outputs
@@ -113,7 +113,7 @@ void HttpParse(HttpParse_typ* t) {
 	if(memcmp((void*)t->data, "HTTP", 4) == 0) {
 		int minor_version, returnValue, status;
 		size_t statusStringLen, numHeaders;
-		struct phr_header headerLines[HTTP_MAI_NUM_HEADER_LINES+3] = {};
+		struct phr_header headerLines[LLHTTP_MAI_NUM_HEADER_LINES+3] = {};
 		char* statusString;
 		
 		numHeaders = sizeof(headerLines)/sizeof(headerLines[0]);
@@ -129,7 +129,7 @@ void HttpParse(HttpParse_typ* t) {
 			case -1:
 				// Error
 				t->error = 1;
-				t->errorId = Http_ERR_PARSE;
+				t->errorId = LLHTTP_ERR_PARSE;
 				return;
 				break;
 			
@@ -142,7 +142,7 @@ void HttpParse(HttpParse_typ* t) {
 			case -3:
 				// Max headers reached
 				t->error = 1;
-				t->errorId = Http_ERR_MAX_HEADERS;
+				t->errorId = LLHTTP_ERR_MAX_HEADERS;
 				return;
 				break;
 		}
@@ -173,7 +173,7 @@ void HttpParse(HttpParse_typ* t) {
 		int minor_version, returnValue, status;
 		size_t methodlen, numHeaders, pathlen;
 		char *method, *path;
-		struct phr_header headerLines[HTTP_MAI_NUM_HEADER_LINES+3] = {};
+		struct phr_header headerLines[LLHTTP_MAI_NUM_HEADER_LINES+3] = {};
 		numHeaders = sizeof(headerLines)/sizeof(headerLines[0]);
 		returnValue = phr_parse_request((char*)t->data, t->dataLength, (const char**)&method, &methodlen, &path, &pathlen, &t->header.version, headerLines, &numHeaders, 0);
 		switch (returnValue) {
@@ -186,7 +186,7 @@ void HttpParse(HttpParse_typ* t) {
 			case -1:
 				// Error
 				t->error = 1;
-				t->errorId = Http_ERR_PARSE;
+				t->errorId = LLHTTP_ERR_PARSE;
 				return;
 				break;
 			
@@ -199,7 +199,7 @@ void HttpParse(HttpParse_typ* t) {
 			case -3:
 				// Max headers reached
 				t->error = 1;
-				t->errorId = Http_ERR_MAX_HEADERS;
+				t->errorId = LLHTTP_ERR_MAX_HEADERS;
 				return;
 				break;
 		}
@@ -227,21 +227,21 @@ void HttpParse(HttpParse_typ* t) {
 	
 }
 
-signed short HttpgetHeaderIndex(unsigned long headerlines, unsigned long name, unsigned long value) {
-	if(!headerlines || !name) return Http_ERR_NOT_FOUND;
-	HttpHeaderLine_typ* lines = headerlines;
+signed short LLHttpgetHeaderIndex(unsigned long headerlines, unsigned long name, unsigned long value) {
+	if(!headerlines || !name) return LLHTTP_ERR_NOT_FOUND;
+	LLHttpHeaderLine_typ* lines = headerlines;
 	signed int index;
 	for (index = 0; index < sizeof(lines->name)/sizeof(lines->name[0]); index++) {
 		if(lines[index].name[0] == '\0') break;
 		if(strcmp(lines[index].name, name) == 0) {
 			if((value && strcmp(lines[index].value, value)) || (!value)) return index;
-			return Http_ERR_VALUE_MISMATCH;
+			return LLHTTP_ERR_VALUE_MISMATCH;
 		}
 	}
 	
-	return Http_ERR_NOT_FOUND;
+	return LLHTTP_ERR_NOT_FOUND;
 }
 
-plcbit HttpHeaderContains(unsigned long headerlines, unsigned long name, unsigned long value) {
-	return HttpgetHeaderIndex(headerlines, name, value) >= 0 ? 1 : 0;
+plcbit LLHttpHeaderContains(unsigned long headerlines, unsigned long name, unsigned long value) {
+	return LLHttpgetHeaderIndex(headerlines, name, value) >= 0 ? 1 : 0;
 }
