@@ -15,6 +15,7 @@ extern "C" {
 
 #define CONFIG_CATCH_MAIN
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/benchmark/catch_benchmark_all.hpp>
 
 
 using namespace std;
@@ -98,6 +99,36 @@ TEST_CASE( "Test HTTP Parser", "[LLHttp]" ) {
         REQUIRE(parser.header.status == 200);
         REQUIRE(strcmp(parser.header.lines[0].name, "custom-header") == 0);
         REQUIRE(strcmp(parser.header.lines[0].value, "1") == 0);
+    }
+
+    SECTION("Benchmark HTTP Parser") {
+        BENCHMARK("Http Parser Request Sm") {
+            return ParseTest(
+                "GET /hello.htm HTTP/1.1"\
+                "User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)"\
+                "Host: www.tutorialspoint.com"\
+                "Accept-Language: en-us"\
+                "Accept-Encoding: gzip, deflate"\
+                "Connection: Keep-Alive"
+                );
+        };
+        BENCHMARK("Http Parser Response Sm") {
+            return ParseTest(
+                "HTTP/1.1 200 OK"\
+                "Date: Mon, 27 Jul 2009 12:28:53 GMT"\
+                "Server: Apache/2.2.14 (Win32)"\
+                "Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT"\
+                "Content-Length: 88"\
+                "Content-Type: text/html"\
+                "Connection: Closed"
+                ""\
+                "<html>"\
+                "<body>"\
+                "<h1>Hello, World!</h1>"\
+                "</body>"\
+                "</html>"
+                );
+        };
     }
 
     // TODO: Test response with missing body
