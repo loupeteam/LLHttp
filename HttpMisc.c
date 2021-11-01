@@ -23,19 +23,19 @@
 #include "HttpUtility.h"
 #include <string.h>
 
-plcbit HttpStatus_isInformational(signed short code) { return (code >= 100 && code < 200); } /*!< \returns \c true if the given \p code is an informational code. */
-plcbit HttpStatus_isSuccessful(signed short code)    { return (code >= 200 && code < 300); } /*!< \returns \c true if the given \p code is a successful code. */
-plcbit HttpStatus_isRedirection(signed short code)   { return (code >= 300 && code < 400); } /*!< \returns \c true if the given \p code is a redirectional code. */
-plcbit HttpStatus_isClientError(signed short code)   { return (code >= 400 && code < 500); } /*!< \returns \c true if the given \p code is a client error code. */
-plcbit HttpStatus_isServerError(signed short code)   { return (code >= 500 && code < 600); } /*!< \returns \c true if the given \p code is a server error code. */
-plcbit HttpStatus_isError(signed short code)         { return (code >= 400); }               /*!< \returns \c true if the given \p code is any type of error code. */
+plcbit LLHttpStatus_isInformational(signed short code) { return (code >= 100 && code < 200); } /*!< \returns \c true if the given \p code is an informational code. */
+plcbit LLHttpStatus_isSuccessful(signed short code)    { return (code >= 200 && code < 300); } /*!< \returns \c true if the given \p code is a successful code. */
+plcbit LLHttpStatus_isRedirection(signed short code)   { return (code >= 300 && code < 400); } /*!< \returns \c true if the given \p code is a redirectional code. */
+plcbit LLHttpStatus_isClientError(signed short code)   { return (code >= 400 && code < 500); } /*!< \returns \c true if the given \p code is a client error code. */
+plcbit LLHttpStatus_isServerError(signed short code)   { return (code >= 500 && code < 600); } /*!< \returns \c true if the given \p code is a server error code. */
+plcbit LLHttpStatus_isError(signed short code)         { return (code >= 400); }               /*!< \returns \c true if the given \p code is any type of error code. */
 
-plcbit HttpStatus_getDescription(signed short code, unsigned long dest) {
+plcbit LLHttpStatus_getDescription(signed short code, unsigned long dest) {
 	strcpy((char*)dest, HttpStatusPhrase(code));
 	return 0;
 }
 
-plcbit HttpMethodMatch(LLHttpMethod_enum a, LLHttpMethod_enum b) {
+plcbit LLHttpMethodMatch(LLHttpMethod_enum a, LLHttpMethod_enum b) {
 	return (a == b || a == LLHTTP_METHOD_ANY || b == LLHTTP_METHOD_ANY);
 }
 
