@@ -13,146 +13,127 @@ extern "C" {
 #include <iostream>
 #include <string.h>
 
+#define CONFIG_CATCH_MAIN
+#include <catch2/catch_test_macros.hpp>
+
+
 using namespace std;
 
-void test_uriMatch(void);
-void test_parse(void);
-void test_utility(void);
-int test_all();
-
-inline constexpr unsigned char operator "" _uchar( unsigned long long arg ) noexcept
-{
-    return static_cast< unsigned char >( arg );
-}
-
-
-int test_all()
-{
-    test_uriMatch();
-    test_parse();
-    test_utility();
-    /* code */
-    return 0;
-}
-
-void test_uriMatch(void) {
-    #define testHttpUriMatch(a,b,c) \
-    ({\
-    unsigned char r = HttpUriMatch((UDINT)a, (UDINT)b); \
-    printf("\033[0mChecking URI Match: Selctor: \033[0;33m%s\033[0m, uri: \033[0;33m%s\033[0m, is a match? %s%s\n", a, b, (c==r?"\033[0;32m":"\033[0;31m"), (r ? "true" : "false")); \
-    })
+TEST_CASE( "Test HTTP URI Match", "[LLHttp]" ) {
+    #define testHttpUriMatch(a,b,c) REQUIRE(HttpUriMatch((UDINT)a, (UDINT)b) == c)
     
-    testHttpUriMatch("/files/*", "/files/", 1_uchar);
-    testHttpUriMatch("/files/*", "/files/test", 1_uchar);
-    testHttpUriMatch("/files/*", "/files/test.cpp", 1_uchar);
-    testHttpUriMatch("/files/*", "/files/deeper/", 0_uchar);
-    testHttpUriMatch("/files/*", "/files/deeper/test.cpp", 0_uchar);
-    testHttpUriMatch("/files/*", "/other", 0_uchar);
-    testHttpUriMatch("/files/*", "/", 0_uchar);
+    SECTION( "Should match single wildcard at end of path" ) {
 
-    printf("\033[0m\n");
+        testHttpUriMatch("/files/*", "/files/", true);
+        testHttpUriMatch("/files/*", "/files/test", true);
+        testHttpUriMatch("/files/*", "/files/test.cpp", true);
+        testHttpUriMatch("/files/*", "/files/deeper/", false);
+        testHttpUriMatch("/files/*", "/files/deeper/test.cpp", false);
+        testHttpUriMatch("/files/*", "/other", false);
+        testHttpUriMatch("/files/*", "/", false);
 
-    testHttpUriMatch("/files/*/", "/files/", 0_uchar);
-    testHttpUriMatch("/files/*/", "/files/test", 0_uchar);
-    testHttpUriMatch("/files/*/", "/files/test.cpp", 0_uchar);
-    testHttpUriMatch("/files/*/", "/files/deeper/", 1_uchar);
-    testHttpUriMatch("/files/*/", "/files/deeper/test.cpp", 0_uchar);
-    testHttpUriMatch("/files/*/", "/other", 0_uchar);
-    testHttpUriMatch("/files/*/", "/", 0_uchar);
+    }
+    SECTION( "Should match single wildcard in path" ) {
 
-    printf("\033[0m\n");
+    testHttpUriMatch("/files/*/", "/files/", false);
+    testHttpUriMatch("/files/*/", "/files/test", false);
+    testHttpUriMatch("/files/*/", "/files/test.cpp", false);
+    testHttpUriMatch("/files/*/", "/files/deeper/", true);
+    testHttpUriMatch("/files/*/", "/files/deeper/test.cpp", false);
+    testHttpUriMatch("/files/*/", "/other", false);
+    testHttpUriMatch("/files/*/", "/", false);
 
-    testHttpUriMatch("/files/**", "/files/", 1_uchar);
-    testHttpUriMatch("/files/**", "/files/test", 1_uchar);
-    testHttpUriMatch("/files/**", "/files/test.cpp", 1_uchar);
-    testHttpUriMatch("/files/**", "/files/deeper/", 1_uchar);
-    testHttpUriMatch("/files/**", "/files/deeper/test.cpp", 1_uchar);
-    testHttpUriMatch("/files/**", "/other", 0_uchar);
-    testHttpUriMatch("/files/**", "/", 0_uchar);
+    }
+    SECTION( "Should match double wildcard" ) {
 
-    printf("\033[0m\n");
+    testHttpUriMatch("/files/**", "/files/", true);
+    testHttpUriMatch("/files/**", "/files/test", true);
+    testHttpUriMatch("/files/**", "/files/test.cpp", true);
+    testHttpUriMatch("/files/**", "/files/deeper/", true);
+    testHttpUriMatch("/files/**", "/files/deeper/test.cpp", true);
+    testHttpUriMatch("/files/**", "/other", false);
+    testHttpUriMatch("/files/**", "/", false);
 
-    testHttpUriMatch("/files/test.cpp", "/files/", 0);
-    testHttpUriMatch("/files/test.cpp", "/files/test", 0);
-    testHttpUriMatch("/files/test.cpp", "/files/test.cpp", 1);
-    testHttpUriMatch("/files/test.cpp", "/files/deeper/", 0);
-    testHttpUriMatch("/files/test.cpp", "/files/deeper/test.cpp", 0);
-    testHttpUriMatch("/files/test.cpp", "/other", 0);
-    testHttpUriMatch("/files/test.cpp", "/", 0);
+    }
+    SECTION( "Should match exact path" ) {
 
-    printf("\033[0m\n");
+    testHttpUriMatch("/files/test.cpp", "/files/", false);
+    testHttpUriMatch("/files/test.cpp", "/files/test", false);
+    testHttpUriMatch("/files/test.cpp", "/files/test.cpp", true);
+    testHttpUriMatch("/files/test.cpp", "/files/deeper/", false);
+    testHttpUriMatch("/files/test.cpp", "/files/deeper/test.cpp", false);
+    testHttpUriMatch("/files/test.cpp", "/other", false);
+    testHttpUriMatch("/files/test.cpp", "/", false);
+
+    }
 
     #undef testHttpUriMatch
 }
 
-void test_parse(void) {
+TEST_CASE( "Test HTTP Parser", "[LLHttp]" ) {
     HttpParse_typ parser = {};
 
-    #define ParseTest(x) parser.data = (UDINT)x;parser.dataLength = strlen((char*)parser.data);printf("\033[0mParse test, parsing message: %s\n", x);HttpParse(&parser);
-    #define Expect(x, y) if(x != y) printf("\033[0;31mExpected %s (%i) to be %s\n", #x, x, #y); else printf("%s = %s. test passed...\n", #x, #y);
-    #define ExpectStrcmp(x, y) if(strcmp(x,y)) printf("\033[0;31mExpected %s (%s) to be %s\n\033[0m", #x, x, #y); else printf("%s = %s. test passed...\n", #x, #y);
+    #define ParseTest(x) parser.data = (UDINT)x;parser.dataLength = strlen((char*)parser.data);HttpParse(&parser);
 
-    ParseTest("GET / HTTP/1.0\r\n");
-    Expect(parser.error, 0);
-    Expect(parser.header.method, HTTP_METHOD_GET);
-    ExpectStrcmp(parser.header.uri, "/");
+    SECTION( "Parse simple request with no body and no header values" ) {
+        ParseTest("GET / HTTP/1.0\r\n");
+        REQUIRE(parser.error == false);
+        REQUIRE(parser.header.method == HTTP_METHOD_GET);
+        REQUIRE(strcmp(parser.header.uri, "/") == 0);
+    }
 
-    ParseTest("HTTP/1.0 200 OK\r\ncontent-length: 6\r\ncontent-type: text\r\n\r\nsimple");
-    Expect(parser.error, 0);
-    Expect(parser.contentPresent, 1);
-    Expect(parser.header.contentLength, 6);
-    ExpectStrcmp((char*)parser.content, "simple");
-    ExpectStrcmp((char*)parser.header.contentType, "text");
+    SECTION( "Parse simple response with basic body" ) {
+        ParseTest("HTTP/1.0 200 OK\r\ncontent-length: 6\r\ncontent-type: text\r\n\r\nsimple");
+        REQUIRE(parser.error == false);
+        REQUIRE(parser.contentPresent == true);
+        REQUIRE(parser.header.contentLength == 6);
+        REQUIRE(strcmp((char*)parser.content, "simple") == 0);
+        REQUIRE(strcmp((char*)parser.header.contentType, "text") == 0);
+    }
 
-    ParseTest("HTTP/1.0 200 OK\r\ncustom-header: 1\r\n\r");
-    Expect(parser.error, 0);
-    Expect(parser.contentPresent, 0);
-    Expect(parser.header.status, 200);
-    ExpectStrcmp(parser.header.lines[0].name, "custom-header");
-    ExpectStrcmp(parser.header.lines[0].value, "1");
-    
+    SECTION( "Parse simple response with custom header value" ) {
+        ParseTest("HTTP/1.0 200 OK\r\ncustom-header: 1\r\n\r");
+        REQUIRE(parser.error == false);
+        REQUIRE(parser.contentPresent == false);
+        REQUIRE(parser.header.status == 200);
+        REQUIRE(strcmp(parser.header.lines[0].name, "custom-header") == 0);
+        REQUIRE(strcmp(parser.header.lines[0].value, "1") == 0);
+    }
+
+    // TODO: Test response with missing body
+    // TODO: Test request with missing body
+    // TODO: Test partial packets
 
     #undef ParserTest
-    #undef Expect
-    #undef ExpectStrcmp
 }
 
-void test_utility() {
+TEST_CASE( "Test HTTP Utility FNs", "[LLHttp]" ) {
+
     char dest[250] = {};
-    #define getMethodStringTest(m, str) getMethodString(m, (UDINT)&dest, sizeof(dest)); if(strcmp(str, dest)) printf("Test getMethodString: %s \033[0;31mError Expect: %s, Got: %s\033[0m\n", #m, str, dest); else printf("Test getMethodString: %s complete\n", str);
-    getMethodStringTest(HTTP_METHOD_GET, "GET");
-    getMethodStringTest(HTTP_METHOD_PUT, "PUT");
-    getMethodStringTest(HTTP_METHOD_POST, "POST");
-    getMethodStringTest(HTTP_METHOD_DELETE, "DELETE");
-    getMethodStringTest(HTTP_METHOD_HEAD, "HEAD");
-    getMethodStringTest(HTTP_METHOD_OPTIONS, "OPTIONS");
-    getMethodStringTest(HTTP_METHOD_PATCH, "PATCH");
-    getMethodStringTest(HTTP_METHOD_TRACE, "TRACE");
-    #undef getMethodStringTest
 
-    #define getMethodFromStringTest(mexpt, mstr) \
-    ({\
-    DINT m = parseMethodString((UDINT)mstr, strlen(mstr)); if(m != mexpt) printf("Test parseMethodString: %s \033[0;31mError Expect: %s (%s), Got: %s\033[0m\n", #mstr, mexpt, #mexpt, m); else printf("Test parseMethodString: %s complete\n", mstr);\
-    })
-    getMethodFromStringTest(HTTP_METHOD_GET, "GET");
-    getMethodFromStringTest(HTTP_METHOD_PUT, "PUT");
-    getMethodFromStringTest(HTTP_METHOD_POST, "POST");
-    getMethodFromStringTest(HTTP_METHOD_DELETE, "DELETE");
-    getMethodFromStringTest(HTTP_METHOD_HEAD, "HEAD");
-    getMethodFromStringTest(HTTP_METHOD_OPTIONS, "OPTIONS");
-    getMethodFromStringTest(HTTP_METHOD_PATCH, "PATCH");
-    getMethodFromStringTest(HTTP_METHOD_TRACE, "TRACE");
-    #undef getMethodFromStringTest
-}
+    SECTION( "Verify return values for getMethodString" ) {
+        #define getMethodStringTest(m, str) getMethodString(m, (UDINT)&dest, sizeof(dest)); REQUIRE(strcmp(str, dest) == 0)
+        getMethodStringTest(HTTP_METHOD_GET, "GET");
+        getMethodStringTest(HTTP_METHOD_PUT, "PUT");
+        getMethodStringTest(HTTP_METHOD_POST, "POST");
+        getMethodStringTest(HTTP_METHOD_DELETE, "DELETE");
+        getMethodStringTest(HTTP_METHOD_HEAD, "HEAD");
+        getMethodStringTest(HTTP_METHOD_OPTIONS, "OPTIONS");
+        getMethodStringTest(HTTP_METHOD_PATCH, "PATCH");
+        getMethodStringTest(HTTP_METHOD_TRACE, "TRACE");
+        #undef getMethodStringTest
+    }
 
-int main(int argc, char const *argv[])
-{
-    cout << "\n-------Starting---------\n" << endl;
-
-    test_all();
-
-    cout << "\n-------Complete---------\n" << endl;
-
-    /* code */
-    return 0;
+    SECTION( "Verify return values for parseMethodString" ) {
+        #define getMethodFromStringTest(mexpt, mstr) REQUIRE(parseMethodString((UDINT)mstr, strlen(mstr)) == mexpt)
+        getMethodFromStringTest(HTTP_METHOD_GET, "GET");
+        getMethodFromStringTest(HTTP_METHOD_PUT, "PUT");
+        getMethodFromStringTest(HTTP_METHOD_POST, "POST");
+        getMethodFromStringTest(HTTP_METHOD_DELETE, "DELETE");
+        getMethodFromStringTest(HTTP_METHOD_HEAD, "HEAD");
+        getMethodFromStringTest(HTTP_METHOD_OPTIONS, "OPTIONS");
+        getMethodFromStringTest(HTTP_METHOD_PATCH, "PATCH");
+        getMethodFromStringTest(HTTP_METHOD_TRACE, "TRACE");
+        #undef getMethodFromStringTest
+    }
 }
