@@ -24,7 +24,7 @@ GIT_REPOSITORY https://github.com/catchorg/Catch2.git
 GIT_TAG        v3.0.0-preview3
 )
 
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
 
 FetchContent_MakeAvailable(Catch2)
 add_executable(LLHttp_test ${LLHttp_SRC})
