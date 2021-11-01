@@ -111,8 +111,8 @@ void HttpParse(HttpParse_typ* t) {
 		return;
 	}
 	if(memcmp((void*)t->data, "HTTP", 4) == 0) {
-		int minor_version, returnValue, status, numHeaders;
-		size_t statusStringLen;
+		int minor_version, returnValue, status;
+		size_t statusStringLen, numHeaders;
 		struct phr_header headerLines[HTTP_MAI_NUM_HEADER_LINES+3] = {};
 		char* statusString;
 		
@@ -153,13 +153,13 @@ void HttpParse(HttpParse_typ* t) {
 				t->header.contentLength = brsatoi(headerLines[index].value);
 			}
 			else if(strncasecmp("content-type", headerLines[index].name, headerLines[index].name_len) == 0) {
-				stringlcpy(t->header.contentType, headerLines[index].name, headerLines[index].name_len+1);
+				stringlcpy(t->header.contentType, headerLines[index].value, min(headerLines[index].value_len+1, sizeof(t->header.contentType)));
 			}
 			
 			copyHeaderLine(&t->header.lines[index], &headerLines[index]);
 		}
 		
-		// We do not have content if status is 1XX, 204, 304, or content lenght is 0
+		// We do not have content if status is 1XX, 204, 304, or content length is 0
 		// Its possible that we still do not have content if the request was a HEAD. We do not have anyway to know this
 		// See spec at https://greenbytes.de/tech/webdav/rfc7230.html#message.body
 		if(t->header.status/100 != 1 && t->header.status%100 != 4 && t->header.contentLength != 0) {
@@ -168,10 +168,10 @@ void HttpParse(HttpParse_typ* t) {
 			t->partialContent = (returnValue+t->header.contentLength > t->dataLength);
 		}
 		
-     
 	}
 	else {
-		int minor_version, returnValue, status, methodlen, pathlen, numHeaders;
+		int minor_version, returnValue, status;
+		size_t methodlen, numHeaders, pathlen;
 		char *method, *path;
 		struct phr_header headerLines[HTTP_MAI_NUM_HEADER_LINES+3] = {};
 		numHeaders = sizeof(headerLines)/sizeof(headerLines[0]);
@@ -205,7 +205,7 @@ void HttpParse(HttpParse_typ* t) {
 		}
 		
 		t->header.method = parseMethodString(method, methodlen);
-		stringlcpy(t->header.uri, path, min(pathlen+1, sizeof(t->header.uri)));
+		stringlcpy((UDINT)t->header.uri, (UDINT)path, min(pathlen+1, sizeof(t->header.uri)));
 		
 		unsigned int index;
 		for (index = 0; index < numHeaders; index++) {
@@ -213,7 +213,7 @@ void HttpParse(HttpParse_typ* t) {
 				t->header.contentLength = brsatoi(headerLines[index].value);
 			}
 			else if(strncasecmp("content-type", headerLines[index].name, headerLines[index].name_len) == 0) {
-				stringlcpy(t->header.contentType, headerLines[index].name, headerLines[index].name_len+1);
+				stringlcpy(t->header.contentType, headerLines[index].value, min(headerLines[index].value_len+1, sizeof(t->header.contentType)));
 			}
 			
 			copyHeaderLine(&t->header.lines[index], &headerLines[index]);
