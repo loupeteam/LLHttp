@@ -78,7 +78,7 @@ TEST_CASE( "Test HTTP Parser", "[LLHttp]" ) {
 	#define ParseTest(x) parser.data = (UDINT)x;parser.dataLength = strlen((char*)parser.data);HttpParse(&parser);
 
 	SECTION( "Parse simple request with no body and no header values" ) {
-		ParseTest("GET / HTTP/1.0\r\n");
+		ParseTest("GET / HTTP/1.0\r\n\r\n");
 		CHECK(parser.error == false);
 		CHECK(parser.header.method == HTTP_METHOD_GET);
 		REQUIRE_THAT(parser.header.uri, Catch::Matchers::Equals("/"));
@@ -94,7 +94,7 @@ TEST_CASE( "Test HTTP Parser", "[LLHttp]" ) {
 	}
 
 	SECTION( "Parse simple response with custom header value" ) {
-		ParseTest("HTTP/1.0 200 OK\r\ncustom-header: 1\r\n\r");
+		ParseTest("HTTP/1.0 200 OK\r\ncustom-header: 1\r\n\r\n");
 		CHECK(parser.error == false);
 		CHECK(parser.contentPresent == false);
 		CHECK(parser.header.status == 200);
