@@ -43,7 +43,7 @@ void errorCallback(LLHttpRequest_typ* t, LLHttpServiceLink_typ* api, LLHttpHeade
 			t->contentLength = t->header.contentLength;
 			if(content) {
 				unsigned long length = MIN(t->header.contentLength, t->responseSize);
-				if(t->pResponse) memcpy(t->pResponse, content, length);
+				if(t->pResponse) memcpy((void*)t->pResponse, (void*)content, length);
 			}
 		}
 	}
@@ -53,7 +53,7 @@ void LLHttpRequest(LLHttpRequest_typ* t) {
 	// TODO: Check for invalid ident
 	if(!t || t->ident == 0) return;
 	
-	LLHttpServiceLink_typ* ident = t->ident;
+	LLHttpServiceLink_typ* ident = (LLHttpServiceLink_typ*)t->ident;
 	if(t->send && !t->internal.send) {
 		unsigned long i, len;
 		LLHttpServiceRequest_typ request = {};
@@ -67,14 +67,14 @@ void LLHttpRequest(LLHttpRequest_typ* t) {
 		
 		len = MIN(sizeof(request.userHeader)/sizeof(request.userHeader[0]), t->numUserHeaders);
 		if(t->pUserHeader) {
-			LLHttpHeaderLine_typ* headerLine = t->pUserHeader;
+			LLHttpHeaderLine_typ* headerLine = (LLHttpHeaderLine_typ*)t->pUserHeader;
 			for (i = 0; i < len; i++) {
 				strcpy(request.userHeader[i].name, headerLine[i].name);
 				strcpy(request.userHeader[i].value, headerLine[i].value);
 			}
 		}
 		
-		BufferAddToBottom(&ident->requestBuffer, (UDINT)&request);
+		BufferAddToBottom((UDINT)&ident->requestBuffer, (UDINT)&request);
 		
 		t->internal.error = 0;
 		t->internal.done = 0;

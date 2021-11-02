@@ -98,7 +98,7 @@ void LLHttpServerInit(LLHttpServer_typ* t) {
 	}
 	
 	
-	//t->internal.pClients->recievedBufferSize;
+	//t->internal.pClients->receivedBufferSize;
 	
 	//t->internal.pClients->api;
 	
@@ -118,7 +118,7 @@ void LLHttpServer(LLHttpServer_typ* t) {
 	
 	if(t->enable) {
 		strcpy(t->internal.tcpMgr.IN.CFG.LocalIPAddress, t->ipAddress);
-		t->internal.tcpMgr.IN.CFG.LocalPort = t->port ? t->port : t->https ? LLHTTP_HTTPS_PORT : LLHTTP_HTTP_PORT; // Readablilty ??
+		t->internal.tcpMgr.IN.CFG.LocalPort = t->port ? t->port : t->https ? LLHTTP_HTTPS_PORT : LLHTTP_HTTP_PORT; // Readability ??
 		// No need to populate remote IP and port as we are a server :)
 		t->internal.tcpMgr.IN.CFG.UseSSL = t->https;
 		t->internal.tcpMgr.IN.CFG.SSLCertificate = t->sslIndex;
@@ -217,7 +217,7 @@ void LLHttpServer(LLHttpServer_typ* t) {
 			BufferCopyItems(&client->receivedBuffer, 0, 1, client->pCurrentRequest, &client->bufferStatus);
 			LLHttpHandler_typ* handler;
 			unsigned long numMatches = 0;
-			// Check if the handlers for this topic is availible 
+			// Check if the handlers for this topic is available 
 			for (i = 0; i < t->internal.api.handlers.NumberValues; i++) {
 				handler = BufferGetItemAdr(&t->internal.api.handlers, i, &client->bufferStatus);
 				// TODO: Check busy
@@ -230,7 +230,7 @@ void LLHttpServer(LLHttpServer_typ* t) {
 				}
 			}
 			if(numMatches == 0) {
-				// Check if the handlers for this topic is availible 
+				// Check if the handlers for this topic is available 
 				for (i = 0; i < t->internal.api.handlers.NumberValues; i++) {
 					handler = BufferGetItemAdr(&t->internal.api.handlers, i, &client->bufferStatus);
 					// TODO: Check busy
@@ -255,7 +255,7 @@ void LLHttpServer(LLHttpServer_typ* t) {
 		// Call active request
 		//		if(client->requestActive) {
 		//			LLHttpHandler_typ* handler;
-		//			// Check if the handlers for this topic is availible 
+		//			// Check if the handlers for this topic is available 
 		//			for (i = 0; i < t->internal.handlers.NumberValues; i++) {
 		//				handler = BufferGetItemAdr(&t->internal.handlers, i, status);
 		//				// TODO: Check busy
@@ -295,7 +295,7 @@ void LLHttpServer(LLHttpServer_typ* t) {
 			}
 		}
 		
-		// TODO: Handle recieving new sends
+		// TODO: Handle receiving new sends
 		TCPStreamSend(&client->tcpStream);
 		client->tcpStream.IN.CMD.Send = 0;
 		client->tcpStream.IN.CMD.Close = 0;
@@ -375,7 +375,7 @@ signed long LLHttpBuildResponse(unsigned long data, unsigned long _response, uns
 	appendNewLine(dest);
 	
 	// Last-Modified 
-	// Opitional
+	// Optional
 	// TODO
 	
 	// Add user headers
@@ -405,7 +405,7 @@ signed long LLHttpBuildResponse(unsigned long data, unsigned long _response, uns
 	// Add Payload
 	// Optional
 	if(response->payloadLength) {
-		strcat(dest, response->pPayload);
+		strcat(dest, (char*)response->pPayload);
 	}
 	
 	if(pLen) {

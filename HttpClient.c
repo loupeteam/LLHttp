@@ -57,7 +57,7 @@ void httpShiftReceivePointer(LLHttpClient_typ* t, unsigned long bytes) {
 }
 void httpResetReceivePointer(LLHttpClient_typ* t) {
 	t->internal.tcpStream.IN.PAR.pReceiveData = &t->internal.rawrecvData[0];
-	t->internal.bufferSize = sizeof(t->internal.rawrecvData); // this is only here becuase rawrecvData is not dynamic alloc yet
+	t->internal.bufferSize = sizeof(t->internal.rawrecvData); // this is only here because rawrecvData is not dynamic alloc yet
 	t->internal.tcpStream.IN.PAR.MaxReceiveLength = t->internal.bufferSize;
 }
 
