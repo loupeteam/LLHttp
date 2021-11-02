@@ -81,7 +81,7 @@ TEST_CASE( "Test HTTP Parser", "[LLHttp]" ) {
 		ParseTest("GET / HTTP/1.0\r\n\r\n");
 		CHECK(parser.error == false);
 		CHECK(parser.header.method == LLHTTP_METHOD_GET);
-		REQUIRE_THAT(parser.header.uri, Catch::Matchers::Equals("/"));
+		CHECK_THAT(parser.header.uri, Catch::Matchers::Equals("/"));
 	}
 
 	SECTION( "Parse simple response with basic body" ) {
@@ -193,4 +193,100 @@ TEST_CASE( "Test HTTP Build Response", "[LLHttp]" ) {
 		CHECK_THAT(buffer, Catch::Matchers::Contains(contentLength));
 		CHECK_THAT(buffer, Catch::Matchers::Contains(date));
 	}
+}
+
+TEST_CASE( "Test HTTP Header line utility", "[LLHttp]") {
+	#define setHeaderLine(i,n,v) strcpy(lines[i].name, n);strcpy(lines[i].value, v);
+	LLHttpHeaderLine_typ lines[10] = {};
+	setHeaderLine(0,"content-length","10");
+	setHeaderLine(1,"content-type","text");
+	setHeaderLine(2,"Connection","close");
+	setHeaderLine(3,"Accept","text/html");
+	setHeaderLine(4,"Accept-Encoding","gzip, deflate");
+
+	SECTION("Check header lines get index invalid inputs") {
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, 0, 0) == LLHTTP_ERR_NOT_FOUND);
+		CHECK(LLHttpgetHeaderIndex(0, (UDINT)&"content-length", 0) == LLHTTP_ERR_NOT_FOUND);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, 0, (UDINT)&"10") == LLHTTP_ERR_NOT_FOUND);
+		CHECK(LLHttpgetHeaderIndex(0, 0, 0) == LLHTTP_ERR_NOT_FOUND);
+	}
+	SECTION("Check header lines get index wo/value") {
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"content", 0) == LLHTTP_ERR_NOT_FOUND);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"content-length", 0) == 0);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Content-Length", 0) == 0);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"content-type", 0) == 1);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Content-Type", 0) == 1);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"connection", 0) == 2);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Connection", 0) == 2);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"accept", 0) == 3);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Accept", 0) == 3);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"accept-encoding", 0) == 4);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Accept-Encoding", 0) == 4);
+	}
+	SECTION("Check header lines get index w/value") {
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"content", (UDINT)&"any") == LLHTTP_ERR_NOT_FOUND);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"content-length", (UDINT)&"10") == 0);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"content-length", (UDINT)&"110") == LLHTTP_ERR_VALUE_MISMATCH);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"content-type", (UDINT)&"text") == 1);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Content-Type", (UDINT)&"text/html") == LLHTTP_ERR_VALUE_MISMATCH);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"connection", (UDINT)&"close") == 2);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Connection", (UDINT)&"keep-open") == LLHTTP_ERR_VALUE_MISMATCH);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"accept", (UDINT)&"text/html") == 3);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Accept", (UDINT)&"html") == LLHTTP_ERR_VALUE_MISMATCH);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"accept-encoding", (UDINT)&"gzip, deflate") == 4);
+		CHECK(LLHttpgetHeaderIndex((UDINT)&lines, (UDINT)&"Accept-Encoding", (UDINT)&"any") == LLHTTP_ERR_VALUE_MISMATCH);
+	}
+	SECTION("Check header lines contains wo/value") {
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"content", 0) == false);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"content-length", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Content-Length", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"content-type", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Content-Type", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"connection", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Connection", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"accept", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Accept", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"accept-encoding", 0) == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Accept-Encoding", 0) == true);
+	}
+	SECTION("Check header lines contains w/value") {
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"content", (UDINT)&"any") == false);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"content-length", (UDINT)&"10") == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"content-length", (UDINT)&"110") == false);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"content-type", (UDINT)&"text") == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Content-Type", (UDINT)&"text/html") == false);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"connection", (UDINT)&"close") == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Connection", (UDINT)&"keep-open") == false);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"accept", (UDINT)&"text/html") == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Accept", (UDINT)&"html") == false);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"accept-encoding", (UDINT)&"gzip, deflate") == true);
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&"Accept-Encoding", (UDINT)&"any") == false);
+	}
+	SECTION("Check header lines copy header lines") {
+		phr_header src = {};
+		#define copyHeaderLineTest(n,v)\
+		src.name = n;\
+		src.name_len = strlen(src.name);\
+		src.value = v;\
+		src.value_len = strlen(src.value);\
+		copyHeaderLine((LLHttpHeaderLine_typ*)&lines[5], &src);\
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&n, (UDINT)&v) == true);
+
+		copyHeaderLineTest("name", "value");
+		copyHeaderLineTest("Accept-Language", "en-US");
+
+		#undef copyHeaderLineTest
+	}
+	SECTION("Add header lines") {
+		#define addHeaderLineTest(n,v)\
+		LLHttpAddHeaderField((UDINT)&lines, sizeof(lines)/sizeof(lines[0]), (UDINT)n, (UDINT)v);\
+		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&n, (UDINT)&v) == true);
+
+		addHeaderLineTest("name", "value");
+		addHeaderLineTest("Accept-Language", "en-US");
+
+		#undef addHeaderLineTest
+	}
+	
+	#undef setHeaderLine
 }
