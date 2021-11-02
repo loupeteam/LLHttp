@@ -167,5 +167,30 @@ TEST_CASE( "Test HTTP Utility FNs", "[LLHttp]" ) {
 		getMethodFromStringTest(LLHTTP_METHOD_PATCH, "PATCH");
 		getMethodFromStringTest(LLHTTP_METHOD_TRACE, "TRACE");
 		#undef getMethodFromStringTest
+		}
+}
+
+TEST_CASE( "Test HTTP Build Response", "[LLHttp]" ) {
+	char buffer[500];
+	LLHttpServiceResponse_typ response = {};
+	UDINT bufferLen = 0;
+
+	SECTION("Build Http Response Sm") {
+		strcpy(response.uri, "/");
+		response.pPayload = (UDINT)&"simple";
+		response.payloadLength = strlen((char*)response.pPayload);
+		response.status = 200;
+		strcpy(response.userHeader[0].name, "content-type");
+		strcpy(response.userHeader[0].value, "text");
+		LLHttpBuildResponse((UDINT)&buffer, (UDINT)&response, sizeof(buffer), (UDINT)&bufferLen);
+		const std::string contentType{ "\r\ncontent-type: text\r\n" }; // Some reason Catch::Mathers::Contains is not working with char* but works with string
+		const std::string contentLength{ "\r\ncontent-length: 6\r\n" }; 
+		const std::string date{ "\r\nDate:" };
+		// HTTP/1.1 200 OK\r\ncontent-length: 6\r\ncontent-type: text\r\n\r\nsimple
+		CHECK_THAT(buffer, Catch::Matchers::StartsWith("HTTP/1.1 200 OK"));
+		CHECK_THAT(buffer, Catch::Matchers::EndsWith("\r\n\r\nsimple"));
+		CHECK_THAT(buffer, Catch::Matchers::Contains(contentType));
+		CHECK_THAT(buffer, Catch::Matchers::Contains(contentLength));
+		CHECK_THAT(buffer, Catch::Matchers::Contains(date));
 	}
 }
