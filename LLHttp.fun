@@ -9,7 +9,6 @@ FUNCTION_BLOCK LLHttpServer (*Http Server*)
 		ipAddress : STRING[TCPCOMM_STRLEN_IPADDRESS]; (*Local IP*)
 		port : UDINT; (*Local port*)
 		sslIndex : UINT; (*SSl index for Https*)
-		handleTrace : BOOL;
 	END_VAR
 	VAR_OUTPUT
 		ident : UDINT; (*Connection Ident*)
