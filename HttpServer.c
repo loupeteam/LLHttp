@@ -337,7 +337,7 @@ unsigned long appendNewLine(char* dest) {
 	return strlen(dest);
 }
 
-signed long LLHttpBuildResponse(unsigned long data, unsigned long _response, unsigned long dataSize, unsigned long pLen) {
+signed long LLHttpBuildResponse(unsigned long data, unsigned long _response, unsigned long dataSize, unsigned long *pLen) {
 	char* dest = (char*)data;
 	char temp[30];
 	int i;
