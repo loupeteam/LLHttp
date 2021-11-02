@@ -111,3 +111,19 @@ plcbit LLHttpRemoveHandler(unsigned long _ident, unsigned long pHandler) {
 	
 	return 0;
 }
+
+signed long LLHttpAddHeaderField(unsigned long headerlines, unsigned long numLines, unsigned long name, unsigned long value) {
+	if(!headerlines || !name) return LLHTTP_ERR_;
+	if(!numLines) return LLHTTP_ERR_MAX_HEADERS;
+	LLHttpHeaderLine_typ* lines = headerlines;
+	signed int index;
+	for (index = 0; index < numLines; index++) {
+		if(lines[index].name[0] != '\0') continue; // TODO: Maybe change header value if exists?
+		stringlcpy(lines[index].name, name, sizeof(lines[index].name)); // TODO: Maybe to lower here?
+		stringlcpy(lines[index].value, value, sizeof(lines[index].value));
+		return LLHTTP_ERR_OK;
+	}
+	
+	// Fall through means we didnt find a place to add field
+	return LLHTTP_ERR_MAX_HEADERS;
+}
