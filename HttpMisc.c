@@ -113,7 +113,7 @@ plcbit LLHttpRemoveHandler(unsigned long _ident, unsigned long pHandler) {
 }
 
 signed long LLHttpAddHeaderField(unsigned long headerlines, unsigned long numLines, unsigned long name, unsigned long value) {
-	if(!headerlines || !name) return LLHTTP_ERR_;
+	if(!headerlines || !name) return LLHTTP_ERR_INVALID_INPUT;
 	if(!numLines) return LLHTTP_ERR_MAX_HEADERS;
 	LLHttpHeaderLine_typ* lines = headerlines;
 	signed int index;
