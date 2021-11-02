@@ -2,14 +2,14 @@
 
 TYPE
 	LLHttpHeader_typ : 	STRUCT 
-		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE];
-		contentLength : UDINT;
-		uri : STRING[LLHTTP_MAX_LEN_URI];
-		accept : STRING[LLHTTP_MAX_LEN_CONTENT_ACCEPT];
+		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE]; (*Content type *)
+		contentLength : UDINT; (*Content length*)
+		uri : STRING[LLHTTP_MAX_LEN_URI]; (*URI (Request)*)
+		accept : STRING[LLHTTP_MAX_LEN_CONTENT_ACCEPT]; (*Content accept*)
 		lines : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderLine_typ;
-		version : INT;
-		status : INT;
-		method : LLHttpMethod_enum;
+		version : INT; (*Http version*)
+		status : INT; (*Http status (Response)*)
+		method : LLHttpMethod_enum; (*Http method (Request)*)
 	END_STRUCT;
 	LLHttpHeaderLine_typ : 	STRUCT 
 		name : STRING[LLHTTP_MAX_LEN_HEADER_NAME];
@@ -26,8 +26,8 @@ TYPE
 		LLHTTP_METHOD_OPTIONS,
 		LLHTTP_METHOD_PATCH,
 		LLHTTP_METHOD_TRACE,
-		LLHTTP_METHOD_ANY,
-		LLHTTP_METHOD_DEFAULT
+		LLHTTP_METHOD_ANY, (*Match any methods*)
+		LLHTTP_METHOD_DEFAULT (*Match any methods if no other matches*)
 		);
 	LLHttpErr_enum : 
 		(

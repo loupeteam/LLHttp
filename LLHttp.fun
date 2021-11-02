@@ -14,8 +14,8 @@ FUNCTION_BLOCK LLHttpServer (*Http Server*)
 	VAR_OUTPUT
 		ident : UDINT; (*Connection Ident*)
 		numConnectedClients : UINT; (*Number of clients connected*)
-		error : BOOL;
-		errorId : DINT;
+		error : BOOL; (*An error occured, no acknowledge needed*)
+		errorId : DINT; (*Error Id *)
 	END_VAR
 	VAR
 		internal : LLHttpServerInternal_typ;
@@ -26,17 +26,17 @@ FUNCTION_BLOCK LLHttpClient (*Http Client*)
 	VAR_INPUT
 		enable : BOOL; (*Enable client, Client will continously try and connect to server*)
 		bufferSize : UDINT; (*Send / Receive buffer size*)
-		hostname : STRING[TCPCOMM_STRLEN_IPADDRESS];
-		port : UINT;
-		localIPAddress : STRING[TCPCOMM_STRLEN_IPADDRESS];
-		localPort : UINT;
-		https : BOOL;
-		sslIndex : UINT;
+		hostname : STRING[TCPCOMM_STRLEN_IPADDRESS]; (*Server IP or Hostname*)
+		port : UINT; (*Server port (OPTIONAL)*)
+		localIPAddress : STRING[TCPCOMM_STRLEN_IPADDRESS]; (*Local IP address (OPTIONAL)*)
+		localPort : UINT; (*Local Port (OPTIONAL)*)
+		https : BOOL; (*Use HTTPS*)
+		sslIndex : UINT; (*SSL Index when using HTTPS*)
 	END_VAR
 	VAR_OUTPUT
 		connected : BOOL; (*Connected to server *)
 		ident : UDINT; (*Cient ident*)
-		error : BOOL;
+		error : BOOL; (*An error occured, no acknowledge needed*)
 		errorId : DINT;
 	END_VAR
 	VAR
@@ -50,10 +50,10 @@ FUNCTION_BLOCK LLHttpRequest (*Request from header*)
 		method : LLHttpMethod_enum; (*Method*)
 		uri : STRING[LLHTTP_MAX_LEN_URI]; (*Host uri*)
 		send : BOOL; (*Send message*)
-		pUserHeader : UDINT;
-		numUserHeaders : UDINT;
+		pUserHeader : UDINT; (*Pointer to LLHttpHeaderLine_typ array*)
+		numUserHeaders : UDINT; (*Num of elements in pUserHeader*)
 		pContent : UDINT; (*Body content*)
-		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE];
+		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE]; (*Content type of response content*)
 		contentLength : UDINT; (*Length of content*)
 		pResponse : UDINT; (*Buffer for response body*)
 		responseSize : UDINT; (*Size of buffer for response body *)
@@ -61,9 +61,9 @@ FUNCTION_BLOCK LLHttpRequest (*Request from header*)
 	VAR_OUTPUT
 		header : LLHttpHeader_typ; (*Response header*)
 		responseLength : UDINT; (*Response body length*)
-		busy : BOOL;
-		done : BOOL;
-		error : BOOL;
+		busy : BOOL; (*Busy, still sending or awaiting response*)
+		done : BOOL; (*Request sent and response recieved *)
+		error : BOOL; (*An error occured, no acknowledge needed*)
 	END_VAR
 	VAR
 		internal : LLHttpRequestInternal_typ;
@@ -77,11 +77,11 @@ FUNCTION_BLOCK LLHttpResponse (*Respond to requests*)
 		uri : STRING[80]; (*Request URI to listen for*)
 		enable : BOOL; (*Listen for requests*)
 		send : BOOL; (*Send message*)
-		pUserHeader : UDINT;
-		numUserHeaders : UDINT;
+		pUserHeader : UDINT; (*Pointer to LLHttpHeaderLine_typ array*)
+		numUserHeaders : UDINT; (*Num of elements in pUserHeader*)
 		status : UDINT; (*Response status*)
 		pContent : UDINT; (*Response body content*)
-		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE];
+		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE]; (*Content type of response content*)
 		contentLength : UDINT; (*Length of response content*)
 		pRequest : UDINT; (*Buffer for request body*)
 		requestSize : UDINT; (*Size of buffer for request body *)
@@ -112,8 +112,8 @@ FUNCTION_BLOCK LLHttpParse (*Parse Http request or response*)
 		partialContent : BOOL; (*Indicate partial content *)
 		contentPresent : BOOL; (*Indicates content is present in message*)
 		content : UDINT; (*Pointer to content*)
-		error : BOOL; (*Error occurred*)
-		errorId : DINT;
+		error : BOOL; (*An error occured, no acknowledge needed*)
+		errorId : DINT; (*Error Id*)
 	END_VAR
 END_FUNCTION_BLOCK
 
@@ -136,24 +136,24 @@ END_FUNCTION
 
 FUNCTION LLHttpUriMatch : BOOL (*Compares two URIs*)
 	VAR_INPUT
-		a : UDINT;
-		b : UDINT;
+		a : UDINT; (*URI matcher, supports wildcards*)
+		b : UDINT; (*URI *)
 	END_VAR
 END_FUNCTION
 
 FUNCTION LLHttpMethodMatch : BOOL (*Compares two Methods*)
 	VAR_INPUT
-		a : LLHttpMethod_enum;
-		b : LLHttpMethod_enum;
+		a : LLHttpMethod_enum; (*Method 1 *)
+		b : LLHttpMethod_enum; (*Method 2*)
 	END_VAR
 END_FUNCTION
 
 FUNCTION LLHttpBuildResponse : DINT (*Builds response from header data*)
 	VAR_INPUT
-		data : UDINT;
-		response : UDINT;
-		dataSize : UDINT;
-		pLen : UDINT;
+		data : UDINT; (*Buffer to be populated*)
+		response : UDINT; (*LLHttpServiceResponse_typ*)
+		dataSize : UDINT; (*Size of data *)
+		pLen : REFERENCE TO UDINT; (*UDINT to be populated with lenght of data*)
 	END_VAR
 END_FUNCTION
 
