@@ -11,7 +11,6 @@
     <File>HttpServer.c</File>
     <File>HttpRequest.c</File>
     <File>HttpResponse.c</File>
-    <File>HttpRecv.c</File>
     <File>HttpParse.c</File>
     <File>HttpUtility.h</File>
     <File>HttpUtility.c</File>
