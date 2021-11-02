@@ -135,12 +135,11 @@ END_FUNCTION
 FUNCTION LLHttpAddHeaderField : DINT (*Get index of header value*)
 	VAR_INPUT
 		headerlines : UDINT; (*Pointer to header lines*)
-		numLines : UDINT; (*Pointer to header lines*)
-		name : UDINT; (*Key to find*)
-		value : UDINT; (*(optional) value to find*)
+		numLines : UDINT; (*Num of fields in header lines*)
+		name : UDINT; (*Key to add*)
+		value : UDINT; (*Value to add (optional) *)
 	END_VAR
 END_FUNCTION
-
 (*Http Advance functions*)
 
 FUNCTION LLHttpUriMatch : BOOL (*Compares two URIs*)
