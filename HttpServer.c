@@ -391,7 +391,7 @@ signed long LLHttpBuildResponse(unsigned long data, unsigned long _response, uns
 	// Content-Length
 	// Optional
 	if(response->payloadLength) {
-		strcat(dest, "Content-Length: ");
+		strcat(dest, "content-length: ");
 		brsitoa(response->payloadLength, (UDINT)&temp);
 		strcat(dest, temp);
 		appendNewLine(dest);
