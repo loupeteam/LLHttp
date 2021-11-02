@@ -1,18 +1,6 @@
+(*Interface types*)
 
 TYPE
-	LLHttpInternalRequest_typ : 	STRUCT 
-		header : LLHttpHeader_typ;
-		contentStart : USINT;
-	END_STRUCT;
-	LLHttpHandler_typ : 	STRUCT 
-		method : LLHttpMethod_enum;
-		uri : STRING[LLHTTP_MAX_LEN_URI];
-		self : UDINT;
-		newMessageCallback : UDINT;
-		cyclicCallback : UDINT;
-		client : REFERENCE TO LLHttpServerInternalClient_typ;
-		busy : BOOL;
-	END_STRUCT;
 	LLHttpHeader_typ : 	STRUCT 
 		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE];
 		contentLength : UDINT;
@@ -27,117 +15,6 @@ TYPE
 		name : STRING[LLHTTP_MAX_LEN_HEADER_NAME];
 		value : STRING[LLHTTP_MAX_LEN_HEADER_VALUE];
 	END_STRUCT;
-	LLHttpServiceLink_typ : 	STRUCT 
-		requestBuffer : Buffer_typ;
-		responseBuffer : Buffer_typ;
-		handlers : Buffer_typ;
-	END_STRUCT;
-	LLHttpServiceResponse_typ : 	STRUCT 
-		self : UDINT;
-		uri : STRING[LLHTTP_MAX_LEN_URI];
-		status : UDINT;
-		userHeader : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderLine_typ;
-		ip : STRING[80];
-		pPayload : UDINT;
-		payloadLength : UDINT;
-		successCallback : UDINT;
-		errorCallback : UDINT;
-	END_STRUCT;
-	LLHttpServiceRequest_typ : 	STRUCT 
-		self : UDINT;
-		uri : STRING[LLHTTP_MAX_LEN_URI];
-		method : UDINT;
-		userHeader : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderLine_typ;
-		pPayload : UDINT;
-		payloadLength : UDINT;
-		successCallback : UDINT;
-		errorCallback : UDINT;
-	END_STRUCT;
-	LLHttpServerInternalClient_typ : 	STRUCT 
-		connected : USINT;
-		tcpStream : TCPStream_typ;
-		pReceiveData : {REDUND_UNREPLICABLE} UDINT;
-		receiveDataSize : UDINT;
-		pSendData : {REDUND_UNREPLICABLE} UDINT;
-		sendDataSize : UDINT;
-		sendBuffer : {REDUND_UNREPLICABLE} Buffer_typ;
-		receivedBuffer : {REDUND_UNREPLICABLE} Buffer_typ;
-		requestTimer : TON_10ms;
-		recvLength : UDINT;
-		parser : LLHttpParse;
-		requestActive : BOOL;
-		pCurrentRequest : REFERENCE TO LLHttpInternalRequest_typ;
-		pRecvRequest : REFERENCE TO LLHttpInternalRequest_typ;
-		pCurrentResponse : REFERENCE TO LLHttpServiceResponse_typ;
-		api : LLHttpServiceLink_typ;
-		bufferStatus : UINT;
-		error : BOOL;
-		errorId : DINT;
-	END_STRUCT;
-	LLHttpServerInternal_typ : 	STRUCT 
-		responseTimeout : TON;
-		retries : UINT;
-		rawrecvData : ARRAY[0..19]OF STRING[80];
-		rawSendData : ARRAY[0..19]OF STRING[80];
-		bufferSize : UDINT;
-		tcpStream : TCPStream_typ;
-		tcpMgr : TCPConnectionMgr_typ;
-		bufferStatus : UDINT;
-		connected : BOOL;
-		state : LLHttpState_enum;
-		parser : LLHttpParse;
-		pClients : REFERENCE TO LLHttpServerInternalClient_typ;
-		clients : ARRAY[0..LLHTTP_MAI_NUM_CLIENTS]OF LLHttpServerInternalClient_typ; (*For Debug*)
-		numClientsConnected : UDINT;
-		numClients : UINT;
-		initialized : BOOL;
-		api : LLHttpServiceLink_typ;
-	END_STRUCT;
-	LLHttpClientInternal_typ : 	STRUCT 
-		responseTimeout : TON;
-		retries : UINT;
-		rawrecvData : ARRAY[0..19]OF STRING[80];
-		sendHeader : LLHttpHeaderLine_typ;
-		rawSendData : ARRAY[0..19]OF STRING[80];
-		bufferSize : UDINT;
-		tcpStream : TCPStream_typ;
-		tcpMgr : TCPConnectionMgr_typ;
-		currentRequest : LLHttpServiceRequest_typ;
-		api : LLHttpServiceLink_typ;
-		bufferStatus : UDINT;
-		connected : BOOL;
-		state : LLHttpState_enum;
-		parser : LLHttpParse;
-		recvLength : UDINT;
-		tempBuffer : STRING[1000];
-	END_STRUCT;
-	LLHttpConfiguration_typ : 	STRUCT 
-		hostname : STRING[80];
-		port : UINT;
-		username : STRING[80];
-		password : STRING[80];
-		localIPAddress : STRING[80];
-		localPort : UINT;
-		https : BOOL;
-		httpVersion : DINT;
-		sslIndex : UINT;
-	END_STRUCT;
-	LLHttpResponseInternal_typ : 	STRUCT 
-		send : BOOL;
-		done : BOOL;
-		busy : BOOL;
-		error : BOOL;
-		newRequest : BOOL;
-		handler : LLHttpHandler_typ;
-		clientApi : REFERENCE TO LLHttpServiceLink_typ;
-		initialized : BOOL;
-	END_STRUCT;
-	LLHttpRequestInternal_typ : 	STRUCT 
-		send : BOOL;
-		done : BOOL;
-		busy : BOOL;
-		error : BOOL;
-	END_STRUCT;
 	LLHttpMethod_enum : 
 		(
 		LLHTTP_METHOD_GET,
@@ -151,18 +28,6 @@ TYPE
 		LLHTTP_METHOD_TRACE,
 		LLHTTP_METHOD_ANY,
 		LLHTTP_METHOD_DEFAULT
-		);
-	LLHttpState_enum : 
-		(
-		LLHTTP_ST_IDLE,
-		LLHTTP_ST_HEADER,
-		LLHTTP_ST_AUTH,
-		LLHTTP_ST_SEND,
-		LLHTTP_ST_LISTEN,
-		LLHTTP_ST_PARSE,
-		LLHTTP_ST_ERROR,
-		LLHTTP_ST_CLEAN,
-		LLHTTP_ST_
 		);
 	LLHttpErr_enum : 
 		(
@@ -241,5 +106,138 @@ TYPE
 		LLHTTP_STAT_NotExtended := 510, (* The policy for accessing the resource has not been met in the request. [RFC 2774] *)
 		LLHTTP_STAT_NetworkAuthRequired := 511, (* Indicates that the client needs TO authenticate TO gain network access. *)
 		LLHTTP_STAT_xxx_max := 1023
+		);
+END_TYPE
+
+(*Advance types*)
+
+TYPE
+	LLHttpHandler_typ : 	STRUCT 
+		method : LLHttpMethod_enum;
+		uri : STRING[LLHTTP_MAX_LEN_URI];
+		self : UDINT;
+		newMessageCallback : UDINT;
+		client : REFERENCE TO LLHttpServerInternalClient_typ;
+		busy : BOOL;
+	END_STRUCT;
+	LLHttpServiceLink_typ : 	STRUCT 
+		requestBuffer : Buffer_typ;
+		responseBuffer : Buffer_typ;
+		handlers : Buffer_typ;
+	END_STRUCT;
+	LLHttpServiceResponse_typ : 	STRUCT 
+		self : UDINT;
+		uri : STRING[LLHTTP_MAX_LEN_URI];
+		status : UDINT;
+		userHeader : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderLine_typ;
+		pPayload : UDINT;
+		payloadLength : UDINT;
+		successCallback : UDINT;
+		errorCallback : UDINT;
+	END_STRUCT;
+	LLHttpServiceRequest_typ : 	STRUCT 
+		self : UDINT;
+		uri : STRING[LLHTTP_MAX_LEN_URI];
+		method : UDINT;
+		userHeader : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderLine_typ;
+		pPayload : UDINT;
+		payloadLength : UDINT;
+		successCallback : UDINT;
+		errorCallback : UDINT;
+	END_STRUCT;
+	LLHttpServerInternalClient_typ : 	STRUCT 
+		connected : USINT;
+		tcpStream : TCPStream_typ;
+		pReceiveData : {REDUND_UNREPLICABLE} UDINT;
+		receiveDataSize : UDINT;
+		pSendData : {REDUND_UNREPLICABLE} UDINT;
+		sendDataSize : UDINT;
+		sendBuffer : {REDUND_UNREPLICABLE} Buffer_typ;
+		receivedBuffer : {REDUND_UNREPLICABLE} Buffer_typ;
+		requestTimer : TON_10ms;
+		recvLength : UDINT;
+		parser : LLHttpParse;
+		requestActive : BOOL;
+		pCurrentRequest : REFERENCE TO LLHttpInternalRequest_typ;
+		pRecvRequest : REFERENCE TO LLHttpInternalRequest_typ;
+		pCurrentResponse : REFERENCE TO LLHttpServiceResponse_typ;
+		api : LLHttpServiceLink_typ;
+		bufferStatus : UINT;
+		error : BOOL;
+		errorId : DINT;
+	END_STRUCT;
+END_TYPE
+
+(*Internal types*)
+
+TYPE
+	LLHttpInternalRequest_typ : 	STRUCT 
+		header : LLHttpHeader_typ;
+		contentStart : USINT;
+	END_STRUCT;
+	LLHttpServerInternal_typ : 	STRUCT 
+		responseTimeout : TON;
+		retries : UINT;
+		rawrecvData : ARRAY[0..19]OF STRING[80];
+		rawSendData : ARRAY[0..19]OF STRING[80];
+		bufferSize : UDINT;
+		tcpStream : TCPStream_typ;
+		tcpMgr : TCPConnectionMgr_typ;
+		bufferStatus : UDINT;
+		connected : BOOL;
+		state : LLHttpState_enum;
+		parser : LLHttpParse;
+		pClients : REFERENCE TO LLHttpServerInternalClient_typ;
+		clients : ARRAY[0..LLHTTP_MAI_NUM_CLIENTS]OF LLHttpServerInternalClient_typ; (*For Debug*)
+		numClientsConnected : UDINT;
+		numClients : UINT;
+		initialized : BOOL;
+		api : LLHttpServiceLink_typ;
+	END_STRUCT;
+	LLHttpClientInternal_typ : 	STRUCT 
+		responseTimeout : TON;
+		retries : UINT;
+		rawrecvData : ARRAY[0..19]OF STRING[80];
+		sendHeader : LLHttpHeaderLine_typ;
+		rawSendData : ARRAY[0..19]OF STRING[80];
+		bufferSize : UDINT;
+		tcpStream : TCPStream_typ;
+		tcpMgr : TCPConnectionMgr_typ;
+		currentRequest : LLHttpServiceRequest_typ;
+		api : LLHttpServiceLink_typ;
+		bufferStatus : UDINT;
+		connected : BOOL;
+		state : LLHttpState_enum;
+		parser : LLHttpParse;
+		recvLength : UDINT;
+		tempBuffer : STRING[1000];
+	END_STRUCT;
+	LLHttpResponseInternal_typ : 	STRUCT 
+		send : BOOL;
+		done : BOOL;
+		busy : BOOL;
+		error : BOOL;
+		newRequest : BOOL;
+		handler : LLHttpHandler_typ;
+		clientApi : REFERENCE TO LLHttpServiceLink_typ;
+		initialized : BOOL;
+	END_STRUCT;
+	LLHttpRequestInternal_typ : 	STRUCT 
+		send : BOOL;
+		done : BOOL;
+		busy : BOOL;
+		error : BOOL;
+	END_STRUCT;
+	LLHttpState_enum : 
+		(
+		LLHTTP_ST_IDLE,
+		LLHTTP_ST_HEADER,
+		LLHTTP_ST_AUTH,
+		LLHTTP_ST_SEND,
+		LLHTTP_ST_LISTEN,
+		LLHTTP_ST_PARSE,
+		LLHTTP_ST_ERROR,
+		LLHTTP_ST_CLEAN,
+		LLHTTP_ST_
 		);
 END_TYPE

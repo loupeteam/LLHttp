@@ -5,10 +5,8 @@ FUNCTION_BLOCK LLHttpServer (*Http Server*)
 		enable : BOOL; (*Enable server*)
 		bufferSize : UDINT; (*Size of send / recieve buffer*)
 		numClients : UINT; (*Max number of clients at one time*)
-		userHeader : ARRAY[0..4] OF LLHttpHeaderLine_typ; (*User Headers to be added to ever send*)
 		https : BOOL; (*Enable Https *)
 		ipAddress : STRING[TCPCOMM_STRLEN_IPADDRESS]; (*Local IP*)
-		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE];
 		port : UDINT; (*Local port*)
 		sslIndex : UINT; (*SSl index for Https*)
 		handleTrace : BOOL;
