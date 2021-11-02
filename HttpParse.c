@@ -233,8 +233,8 @@ signed short LLHttpgetHeaderIndex(unsigned long headerlines, unsigned long name,
 	signed int index;
 	for (index = 0; index < sizeof(lines->name)/sizeof(lines->name[0]); index++) {
 		if(lines[index].name[0] == '\0') break;
-		if(strcmp(lines[index].name, name) == 0) {
-			if((value && strcmp(lines[index].value, value)) || (!value)) return index;
+		if(strcasecmp(lines[index].name, name) == 0) {
+			if((value && !strcmp(lines[index].value, value)) || (!value)) return index;
 			return LLHTTP_ERR_VALUE_MISMATCH;
 		}
 	}
