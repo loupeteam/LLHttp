@@ -46,10 +46,10 @@ END_FUNCTION_BLOCK
 
 FUNCTION_BLOCK LLHttpRequest (*Request from header*)
 	VAR_INPUT
-		send : BOOL; (*Send message*)
-		method : LLHttpMethod_enum; (*Method*)
 		ident : UDINT; (*Client ident*)
+		method : LLHttpMethod_enum; (*Method*)
 		uri : STRING[LLHTTP_MAX_LEN_URI]; (*Host uri*)
+		send : BOOL; (*Send message*)
 		pUserHeader : UDINT;
 		numUserHeaders : UDINT;
 		pContent : UDINT; (*Body content*)
@@ -80,8 +80,8 @@ FUNCTION_BLOCK LLHttpResponse (*Respond to requests*)
 		pUserHeader : UDINT;
 		numUserHeaders : UDINT;
 		status : UDINT; (*Response status*)
-		contentType : STRING[80];
 		pContent : UDINT; (*Response body content*)
+		contentType : STRING[LLHTTP_MAX_LEN_CONTENT_TYPE];
 		contentLength : UDINT; (*Length of response content*)
 		pRequest : UDINT; (*Buffer for request body*)
 		requestSize : UDINT; (*Size of buffer for request body *)
