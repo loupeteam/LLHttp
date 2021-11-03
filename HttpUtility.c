@@ -142,7 +142,7 @@ const char* HttpStatusPhrase(signed short code)
 
 }
 
-void copyHeaderLine(LLHttpHeaderLine_typ* dest, struct phr_header* src) {
+void copyHeaderLine(LLHttpHeaderField_typ* dest, struct phr_header* src) {
 	unsigned long length, index;
 	length = MIN(sizeof(dest->name)-1, src->name_len);
 	for (index = 0; index < length; index++) {

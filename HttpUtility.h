@@ -14,5 +14,5 @@ typedef void (* LLHttpCallback)( UDINT context, LLHttpServiceLink_typ * api,  LL
 void getMethodString(signed long method, unsigned long dest, unsigned long destSize);
 unsigned int parseMethodString(unsigned long method, unsigned long methodlen);
 const char* HttpStatusPhrase(signed short code);
-void copyHeaderLine(LLHttpHeaderLine_typ* dest, struct phr_header* src);
+void copyHeaderLine(LLHttpHeaderField_typ* dest, struct phr_header* src);
 signed long LLHttpHandlerIndex(unsigned long _ident, unsigned long pHandler);

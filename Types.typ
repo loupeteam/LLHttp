@@ -6,12 +6,12 @@ TYPE
 		contentLength : UDINT; (*Content length*)
 		uri : STRING[LLHTTP_MAX_LEN_URI]; (*URI (Request)*)
 		accept : STRING[LLHTTP_MAX_LEN_CONTENT_ACCEPT]; (*Content accept*)
-		lines : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderLine_typ;
+		lines : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderField_typ;
 		version : INT; (*Http version*)
 		status : INT; (*Http status (Response)*)
 		method : LLHttpMethod_enum; (*Http method (Request)*)
 	END_STRUCT;
-	LLHttpHeaderLine_typ : 	STRUCT 
+	LLHttpHeaderField_typ : 	STRUCT 
 		name : STRING[LLHTTP_MAX_LEN_HEADER_NAME];
 		value : STRING[LLHTTP_MAX_LEN_HEADER_VALUE];
 	END_STRUCT;
@@ -131,7 +131,7 @@ TYPE
 		self : UDINT;
 		uri : STRING[LLHTTP_MAX_LEN_URI];
 		status : UDINT;
-		userHeader : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderLine_typ;
+		userHeader : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderField_typ;
 		pPayload : UDINT;
 		payloadLength : UDINT;
 		successCallback : UDINT;
@@ -141,7 +141,7 @@ TYPE
 		self : UDINT;
 		uri : STRING[LLHTTP_MAX_LEN_URI];
 		method : UDINT;
-		userHeader : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderLine_typ;
+		userHeader : ARRAY[0..LLHTTP_MAI_NUM_HEADER_LINES]OF LLHttpHeaderField_typ;
 		pPayload : UDINT;
 		payloadLength : UDINT;
 		successCallback : UDINT;
@@ -200,7 +200,7 @@ TYPE
 		responseTimeout : TON;
 		retries : UINT;
 		rawrecvData : ARRAY[0..19]OF STRING[80];
-		sendHeader : LLHttpHeaderLine_typ;
+		sendHeader : LLHttpHeaderField_typ;
 		rawSendData : ARRAY[0..19]OF STRING[80];
 		bufferSize : UDINT;
 		tcpStream : TCPStream_typ;

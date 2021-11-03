@@ -105,7 +105,7 @@ void LLHttpResponse(LLHttpResponse_typ* t) {
 			
 			len = MIN(sizeof(response.userHeader)/sizeof(response.userHeader[0]), t->numUserHeaders);
 			if(t->pUserHeader) {
-				LLHttpHeaderLine_typ* headerLine = t->pUserHeader;
+				LLHttpHeaderField_typ* headerLine = t->pUserHeader;
 				for (i = 0; i < len; i++) {
 					strcpy(response.userHeader[i].name, headerLine[i].name);
 					strcpy(response.userHeader[i].value, headerLine[i].value);

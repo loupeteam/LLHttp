@@ -67,7 +67,7 @@ void LLHttpRequest(LLHttpRequest_typ* t) {
 		
 		len = MIN(sizeof(request.userHeader)/sizeof(request.userHeader[0]), t->numUserHeaders);
 		if(t->pUserHeader) {
-			LLHttpHeaderLine_typ* headerLine = (LLHttpHeaderLine_typ*)t->pUserHeader;
+			LLHttpHeaderField_typ* headerLine = (LLHttpHeaderField_typ*)t->pUserHeader;
 			for (i = 0; i < len; i++) {
 				strcpy(request.userHeader[i].name, headerLine[i].name);
 				strcpy(request.userHeader[i].value, headerLine[i].value);

@@ -229,7 +229,7 @@ void LLHttpParse(LLHttpParse_typ* t) {
 
 signed short LLHttpgetHeaderIndex(unsigned long headerlines, unsigned long name, unsigned long value) {
 	if(!headerlines || !name) return LLHTTP_ERR_NOT_FOUND;
-	LLHttpHeaderLine_typ* lines = headerlines;
+	LLHttpHeaderField_typ* lines = headerlines;
 	signed int index;
 	for (index = 0; index < sizeof(lines->name)/sizeof(lines->name[0]); index++) {
 		if(lines[index].name[0] == '\0') break;
