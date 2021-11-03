@@ -11,19 +11,19 @@ pipeline {
         ansiColor('xterm')
     }
     stages {
-        stage('Install CMake') {
-            steps {
+        // stage('Install CMake') {
+        //     steps {
                 
-            }
-        }
+        //     }
+        // }
         stage('Build Project') {
             steps {
                 cmakeBuild buildDir: 'build', buildType: 'Debug', installation: 'InSearchPath', sourceDir: './'
             }
         }
-        stage('Run Tests') {
+        // stage('Run Tests') {
             
-        }
+        // }
     }
     post {
         always {
