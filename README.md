@@ -11,7 +11,7 @@ info@loupe.team
 
 ## Change log
 
- - 0.00.1 - Development (not released)
+ - 0.01.0 - Initial stable version
 
 ## Documentation
 
