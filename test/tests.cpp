@@ -182,7 +182,7 @@ TEST_CASE( "Test HTTP Build Response", "[LLHttp]" ) {
 		response.status = 200;
 		strcpy(response.userHeader[0].name, "content-type");
 		strcpy(response.userHeader[0].value, "text");
-		LLHttpBuildResponse((UDINT)&buffer, (UDINT)&response, sizeof(buffer), (UDINT)&bufferLen);
+		LLHttpBuildResponse((UDINT)&buffer, (UDINT)&response, sizeof(buffer), &bufferLen);
 		const std::string contentType{ "\r\ncontent-type: text\r\n" }; // Some reason Catch::Mathers::Contains is not working with char* but works with string
 		const std::string contentLength{ "\r\ncontent-length: 6\r\n" }; 
 		const std::string date{ "\r\nDate:" };
@@ -197,7 +197,7 @@ TEST_CASE( "Test HTTP Build Response", "[LLHttp]" ) {
 
 TEST_CASE( "Test HTTP Header line utility", "[LLHttp]") {
 	#define setHeaderLine(i,n,v) strcpy(lines[i].name, n);strcpy(lines[i].value, v);
-	LLHttpHeaderLine_typ lines[10] = {};
+	LLHttpHeaderField_typ lines[10] = {};
 	setHeaderLine(0,"content-length","10");
 	setHeaderLine(1,"content-type","text");
 	setHeaderLine(2,"Connection","close");
@@ -269,7 +269,7 @@ TEST_CASE( "Test HTTP Header line utility", "[LLHttp]") {
 		src.name_len = strlen(src.name);\
 		src.value = v;\
 		src.value_len = strlen(src.value);\
-		copyHeaderLine((LLHttpHeaderLine_typ*)&lines[5], &src);\
+		copyHeaderLine((LLHttpHeaderField_typ*)&lines[5], &src);\
 		CHECK(LLHttpHeaderContains((UDINT)&lines, (UDINT)&n, (UDINT)&v) == true);
 
 		copyHeaderLineTest("name", "value");
