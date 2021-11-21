@@ -9,7 +9,7 @@
 #ifdef __cplusplus
 	};
 #endif
-
+#include "HttpUtility.h"
 #include <string.h>
 
 #define MIN(a,b) (((a)<(b))?(a):(b))

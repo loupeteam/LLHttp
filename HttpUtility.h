@@ -16,3 +16,4 @@ unsigned int parseMethodString(unsigned long method, unsigned long methodlen);
 const char* HttpStatusPhrase(signed short code);
 void copyHeaderLine(LLHttpHeaderField_typ* dest, struct phr_header* src);
 signed long LLHttpHandlerIndex(unsigned long _ident, unsigned long pHandler);
+plcbit LLHttpRemoveHandler(unsigned long _ident, unsigned long pHandler);
