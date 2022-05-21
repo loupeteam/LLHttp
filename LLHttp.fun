@@ -24,6 +24,7 @@ END_FUNCTION_BLOCK
 FUNCTION_BLOCK LLHttpClient (*Http Client*)
 	VAR_INPUT
 		enable : BOOL; (*Enable client, Client will continously try and connect to server*)
+		abort : BOOL; (*Abort the existing connection*)
 		bufferSize : UDINT; (*Send / Receive buffer size*)
 		hostname : STRING[TCPCOMM_STRLEN_IPADDRESS]; (*Server IP or Hostname*)
 		port : UINT; (*Server port (OPTIONAL)*)

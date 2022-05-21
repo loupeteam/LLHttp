@@ -292,7 +292,7 @@ void LLHttpClient(LLHttpClient_typ* t) {
 			break;
 	}
 	
-	if(t->internal.tcpStream.OUT.DataReceived && t->internal.tcpStream.OUT.ReceivedDataLength == 0) {
+	if(t->internal.tcpStream.OUT.DataReceived && t->internal.tcpStream.OUT.ReceivedDataLength == 0 || t->abort) {
 		t->internal.tcpStream.IN.CMD.Close = 1;
 		
 		if(t->internal.state != LLHTTP_ST_IDLE) {
