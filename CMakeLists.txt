@@ -18,9 +18,6 @@ enable_testing ()
 add_subdirectory (test)
 add_subdirectory (example)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/../includes/)
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/../includes/loupe/Includes/)
-
 target_link_libraries(LLHttp PUBLIC TCPComm)
 target_link_libraries(LLHttp PUBLIC StringExt)
 target_link_libraries(LLHttp PUBLIC RingBufLib)
