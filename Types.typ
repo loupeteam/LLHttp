@@ -37,6 +37,7 @@ TYPE
 		LLHTTP_ERR_PARSE := 50100,
 		LLHTTP_ERR_MAX_HEADERS,
 		LLHTTP_ERR_INVALID_INPUT,
+		LLHTTP_ERR_PACKET_SIZE_TOO_BIG,
 		LLHTTP_ERR_
 		);
 END_TYPE
@@ -212,6 +213,7 @@ TYPE
 		state : LLHttpState_enum;
 		parser : LLHttpParse;
 		recvLength : UDINT;
+		recvLengthTotal : UDINT;
 		tempBuffer : STRING[1000];
 	END_STRUCT;
 	LLHttpResponseInternal_typ : 	STRUCT 
