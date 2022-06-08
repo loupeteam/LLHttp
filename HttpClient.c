@@ -54,8 +54,9 @@
 BOOL httpShiftReceivePointer(LLHttpClient_typ* t, unsigned long bytes) {
 
 	if( ( (int)t->internal.tcpStream.IN.PAR.MaxReceiveLength - bytes ) > 0 ){
+		t->internal.recvLength += bytes;
 		t->internal.tcpStream.IN.PAR.pReceiveData += bytes;
-		t->internal.tcpStream.IN.PAR.MaxReceiveLength -= bytes; // TODO: Dont allow rollover
+		t->internal.tcpStream.IN.PAR.MaxReceiveLength -= bytes;
 		return 1;
 	}
 	else{			
@@ -67,7 +68,7 @@ void httpResetReceivePointer(LLHttpClient_typ* t) {
 	t->internal.tcpStream.IN.PAR.pReceiveData = &t->internal.rawrecvData[0];
 	t->internal.bufferSize = sizeof(t->internal.rawrecvData); // this is only here because rawrecvData is not dynamic alloc yet
 	t->internal.tcpStream.IN.PAR.MaxReceiveLength = t->internal.bufferSize;
-	t->internal.recvLengthTotal = 0;
+	t->internal.recvLength = 0;
 	
 }
 
@@ -236,19 +237,18 @@ void LLHttpClient(LLHttpClient_typ* t) {
 					t->internal.state = LLHTTP_ST_PARSE;
 				
 					t->internal.tcpStream.IN.CMD.AcknowledgeData = 1;
-				
-					t->internal.recvLength = t->internal.tcpStream.OUT.ReceivedDataLength;
-					t->internal.recvLengthTotal += t->internal.tcpStream.OUT.ReceivedDataLength;
-					
-					if( t->internal.recvLengthTotal > sizeof(t->internal.rawrecvData) ){										
+
+					//Update the recieve buffer and length
+					if( httpShiftReceivePointer(t, t->internal.tcpStream.OUT.ReceivedDataLength) == 0 ){										
 						t->internal.tcpStream.IN.CMD.Send = 0;
 						t->internal.tcpStream.IN.CMD.Receive = 0;
 						t->internal.tcpStream.IN.CMD.Close = 1;
 					
+						HttpClientSetError(t, LLHTTP_ERR_PACKET_SIZE_TOO_BIG );
 						t->internal.state = LLHTTP_ST_ERROR;
 					}
 					else{	
-						memset(((UDINT)&t->internal.rawrecvData)+t->internal.recvLengthTotal, 0, 1); // Append null char
+						memset(((UDINT)&t->internal.rawrecvData)+t->internal.recvLength, 0, 1); // Append null char
 					}
 				}
 			}
@@ -274,20 +274,14 @@ void LLHttpClient(LLHttpClient_typ* t) {
 		case LLHTTP_ST_PARSE:
 			// TODO: Parse message into header and payload
 			t->internal.parser.data = t->internal.rawrecvData;
-			t->internal.parser.dataLength = t->internal.recvLengthTotal;
+			t->internal.parser.dataLength = t->internal.recvLength;
 			LLHttpParse(&t->internal.parser);
 			
 			if(t->internal.parser.partialPacket || (t->internal.parser.partialContent && t->internal.currentRequest.method != LLHTTP_METHOD_HEAD)) {
 				// Handle partial packet
-				// Shift pointer 
-				if( httpShiftReceivePointer(t, t->internal.recvLength) ){
-					t->internal.responseTimeout.IN = 0;
-					t->internal.state = LLHTTP_ST_LISTEN;
-				}
-				else{				
-					HttpClientSetError(t, LLHTTP_ERR_PACKET_SIZE_TOO_BIG );
-					t->internal.state = LLHTTP_ST_ERROR;					
-				}
+				t->internal.responseTimeout.IN = 0;
+				t->internal.state = LLHTTP_ST_LISTEN;
+
 			}
 			else if(t->internal.parser.error) {
 				HttpClientSetError(t, t->internal.parser.errorId);

@@ -213,7 +213,6 @@ TYPE
 		state : LLHttpState_enum;
 		parser : LLHttpParse;
 		recvLength : UDINT;
-		recvLengthTotal : UDINT;
 		tempBuffer : STRING[1000];
 	END_STRUCT;
 	LLHttpResponseInternal_typ : 	STRUCT 
