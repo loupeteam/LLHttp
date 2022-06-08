@@ -1,5 +1,4 @@
 
-
 pipeline {
     agent {
     // Specify a label that defines the type of agent that can be used for this build
@@ -18,17 +17,22 @@ pipeline {
         // }
         stage('Build Project') {
             steps {
-                cmakeBuild buildDir: 'build', buildType: 'Debug', installation: 'InSearchPath', sourceDir: './'
+                cmakeBuild buildDir: 'build', buildType: 'Debug', cleanBuild: true, generator: 'MinGW Makefiles', installation: '3.23.2-autoinstall', label: 'LLHTTP CMake build', sourceDir: './'
+                cmake arguments: '--build ./build "--target LLHttp_test"', installation: '3.23.2-autoinstall', label: 'CMake Generate', workingDir: './'
             }
         }
-        // stage('Run Tests') {
-            
-        // }
+        stage('Run Tests') {
+            steps {
+                bat label: '', script: 'dir build'
+                bat label: '', script: 'dir build\\test'
+                ctest installation: '3.23.2-autoinstall', label: 'Tests'
+            }
+        }
     }
     post {
         always {
             script {
-                    slackSend(channel: "#sandbox-github", message: "LLHttp ran")
+                    slackSend(channel: "sandbox-github", message: "LLHttp ran")
                 }
             }
     }
