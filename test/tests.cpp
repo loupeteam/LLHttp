@@ -290,3 +290,49 @@ TEST_CASE( "Test HTTP Header line utility", "[LLHttp]") {
 	
 	#undef setHeaderLine
 }
+
+
+TEST_CASE( "Test HTTP Partial Packets", "[LLHttp]") {
+
+
+
+	LLHttpClient_typ client = {};
+
+	client.enable = true;
+	client.internal.tcpMgr.OUT.NewConnectionAvailable = true;
+	client.internal.state = LLHTTP_ST_SEND;
+
+
+	strcpy( (char*) &client.internal.rawrecvData, (const char*) &"HTTP/1.1 200 OK\r\n"\
+				"Date: Mon, 27 Jul 2009 12:28:53 GMT\r\n"\
+				"Server: Apache/2.2.14 (Win32)\r\n"\
+				"Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\r\n"\
+				"Content-Length: 46\r\n"\
+				"Content-Type: text/html\r\n"\
+				"Connection: Closed\r\n"
+				"\r\n"\
+				"<html>"\
+				"<body>");
+	client.internal.tcpStream.Internal.FUB.Receive.recvlen = strlen((char*)&client.internal.rawrecvData);	
+
+	//Get through init
+	LLHttpClient( &client );
+
+	strcpy( (char*) client.internal.tcpStream.IN.PAR.pReceiveData, (const char*)&"<h1>Hello, World!</h1>"\
+				"</body>"\
+				"</html>");
+
+	client.internal.tcpStream.Internal.FUB.Receive.recvlen = strlen((char*)client.internal.tcpStream.IN.PAR.pReceiveData) + 1;
+
+	//Get through send
+	LLHttpClient( &client );
+	CHECK( client.error == false );
+	CHECK_THAT( (char*)client.internal.parser.content, Catch::Matchers::Equals(
+				"<html>"\
+				"<body>"\
+				"<h1>Hello, World!</h1>"\
+				"</body>"\
+				"</html>"
+				));
+
+}
