@@ -106,7 +106,9 @@ void LLHttpClient(LLHttpClient_typ* t) {
 		if(t->internal.tcpStream.OUT.Active) t->internal.tcpStream.IN.CMD.Close = 1;
 	}
 	
+	lockComms( 0 );
 	TCPManageConnection(&t->internal.tcpMgr);
+	unlockComms( 0 );
 	t->internal.tcpMgr.IN.CMD.Enable = t->enable;
 	t->internal.tcpMgr.IN.CMD.AcknowledgeConnection = 0;
 	
@@ -122,8 +124,9 @@ void LLHttpClient(LLHttpClient_typ* t) {
 		memcpy(&t->internal.tcpStream.IN.PAR.Connection, &t->internal.tcpMgr.OUT.Connection, sizeof(t->internal.tcpMgr.OUT.Connection));
 		t->internal.connected = 1;
 	}
-	
+	lockComms( 0 );
 	TCPStreamReceive(&t->internal.tcpStream);
+	unlockComms( 0 );
 
 	UDINT bufSize = sizeof(t->internal.rawSendData);
 	
@@ -355,7 +358,10 @@ void LLHttpClient(LLHttpClient_typ* t) {
 		t->internal.tcpStream.IN.CMD.Receive = 0;
 		t->internal.tcpMgr.IN.CMD.Enable = 0;
 	}
+	
+	lockComms( 0 );
 	TCPStreamSend(&t->internal.tcpStream);
+	unlockComms( 0 );
 	t->internal.tcpStream.IN.CMD.Send = 0;
 	t->internal.tcpStream.IN.CMD.Close = 0;
 	t->internal.tcpStream.IN.CMD.AcknowledgeError = 0;
