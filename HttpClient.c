@@ -93,6 +93,7 @@ void LLHttpClient(LLHttpClient_typ* t) {
 		t->internal.tcpMgr.IN.CFG.LocalPort = t->localPort;
 		strcpy(t->internal.tcpMgr.IN.CFG.RemoteIPAddress, t->hostname);
 		t->internal.tcpMgr.IN.CFG.RemotePort = t->port ? t->port : t->https ? LLHTTP_HTTPS_PORT : LLHTTP_HTTP_PORT;;
+		t->internal.tcpMgr.IN.CFG.UseSSL = t->https;
 		
 		// TODO: This needs to be more dynamic
 		t->internal.tcpMgr.IN.CFG.SendBufferSize = t->internal.bufferSize;
