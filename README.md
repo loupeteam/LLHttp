@@ -11,6 +11,8 @@ info@loupe.team
 
 ## Change log
 
+ - 0.01.2 - Add support for HTTPS
+
  - 0.01.1 - Fix memory overrun and partial packets
 
  - 0.01.0 - Initial stable version
