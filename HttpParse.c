@@ -91,6 +91,8 @@ size_t ftoa(float n, char* res, int afterpoint)
 
 #define min(a,b) (((a)<(b))?(a):(b))
 
+unsigned int hexStringToInteger(const char *hex, int length);
+
 
 // TODO: header can have duplicate names, handle this in the future but not important yet
 
@@ -151,6 +153,18 @@ void LLHttpParse(LLHttpParse_typ* t) {
 		for (index = 0; index < numHeaders; index++) {
 			if(strncasecmp("content-length", headerLines[index].name, headerLines[index].name_len) == 0) { // TODO: handle case insensitivity
 				t->header.contentLength = brsatoi(headerLines[index].value);
+			}
+			else if((strncasecmp("transfer-encoding", headerLines[index].name, headerLines[index].name_len) == 0) &&
+					(strncasecmp("chunked", headerLines[index].value, headerLines[index].value_len) == 0)) {
+				for (int i = 0; i < brsstrlen(t->content); i++) {	
+					const char* buf = (const char*)(t->content+i);
+					// Search for the first occurence of '\r\n', as this separates the hex content length field from the rest of the body.
+					if ((*buf == '\r') && (*(buf+1) == '\n')) {						
+						t->header.contentLength = hexStringToInteger((const char*)t->content, i);
+						t->content = t->content + i + 2;
+						break;
+					}
+				}	
 			}
 			else if(strncasecmp("content-type", headerLines[index].name, headerLines[index].name_len) == 0) {
 				stringlcpy(t->header.contentType, headerLines[index].value, min(headerLines[index].value_len+1, sizeof(t->header.contentType)));
@@ -244,4 +258,17 @@ signed short LLHttpgetHeaderIndex(unsigned long headerlines, unsigned long name,
 
 plcbit LLHttpHeaderContains(unsigned long headerlines, unsigned long name, unsigned long value) {
 	return LLHttpgetHeaderIndex(headerlines, name, value) >= 0 ? 1 : 0;
+}
+
+unsigned int hexStringToInteger(const char *hex, int length) {
+	unsigned int result = 0;
+	for (int i = 0; i < length; i++) {
+		result <<= 4; // shift left by 4 bits (making room for the next hex digit)       
+		if (hex[i] >= '0' && hex[i] <= '9') {
+			result += hex[i] - '0';
+		} else if (hex[i] >= 'A' && hex[i] <= 'F') {
+			result += hex[i] - 'A' + 10;
+		} 
+	}
+	return result;
 }
