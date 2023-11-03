@@ -1,4 +1,12 @@
-(*Http Usage FUBs*)
+(*
+ * File: LLHttp.fun
+ * Copyright (c) 2023 Loupe
+ * https://loupe.team
+ * 
+ * This file is part of LLHttp, licensed under the MIT License.
+ *)
+ 
+ (*Http Usage FUBs*)
 
 FUNCTION_BLOCK LLHttpServer (*Http Server*)
 	VAR_INPUT

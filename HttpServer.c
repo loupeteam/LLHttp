@@ -1,13 +1,10 @@
-/********************************************************************
- * COPYRIGHT --  
- ********************************************************************
- * Library: HTTPComm
+/*
  * File: HttpServer.c
- * Author: sClaiborne
- * Created: September 17, 2021
- ********************************************************************
- * Implementation of library HTTPComm
- ********************************************************************/
+ * Copyright (c) 2023 Loupe
+ * https://loupe.team
+ * 
+ * This file is part of LLHttp, licensed under the MIT License.
+ */
 
 #ifdef __cplusplus
 	extern "C"

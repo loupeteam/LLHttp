@@ -1,4 +1,11 @@
-VAR CONSTANT
+(*
+ * File: Constants.var
+ * Copyright (c) 2023 Loupe
+ * https://loupe.team
+ * 
+ * This file is part of LLHttp, licensed under the MIT License.
+ *)
+ VAR CONSTANT
 	LLHTTP_HTTPS_PORT : UINT := 443;
 	LLHTTP_HTTP_PORT : UINT := 80;
 	LLHTTP_MAX_RETRIES : USINT := 5;

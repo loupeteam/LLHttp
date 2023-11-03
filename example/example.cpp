@@ -1,3 +1,10 @@
+/*
+ * File: example.cpp
+ * Copyright (c) 2023 Loupe
+ * https://loupe.team
+ * 
+ * This file is part of LLHttp, licensed under the MIT License.
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
