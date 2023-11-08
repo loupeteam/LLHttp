@@ -14,7 +14,7 @@ To install using the Loupe Package Manager (LPM), in an initialized Automation S
 
 # Licensing
 
-This project is primarily licensed under the [MIT License](LICENSE). However, it includes components under the [ARTISTIC LICENSE 2.0](LICENSE-ARTISTIC-2.0). Please refer to the respective files for full license texts.
+This project is primarily licensed under the [MIT License](LICENSE), including external components also licensed under the MIT License.. Please refer to the respective files for full license texts.
 
 -picohttpparser.c
 -picohttpparser.h
