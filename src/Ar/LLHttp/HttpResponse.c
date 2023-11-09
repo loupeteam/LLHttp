@@ -5,6 +5,7 @@
  * 
  * This file is part of LLHttp, licensed under the MIT License.
  */
+
 #ifdef __cplusplus
 	extern "C"
 	{
