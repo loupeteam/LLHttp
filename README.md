@@ -1,24 +1,20 @@
-# LLHttp
+# Info
+Library is provided by Loupe  
+https://loupe.team  
+info@loupe.team  
+1-800-240-7042  
 
-Loupe Http Library 
+# Description
+Loupe's HTTP(S) library built on top of TCPComm that allows for more control and expandability compared with the standard AsHTTP library. The library provides function blocks for implementing HTTP(S) clients and servers in Automation Runtime.
 
-## Info
+For more documentation and examples, see https://loupeteam.github.io/LoupeDocs/libraries/llhttp.html
 
-Library is provided by Loupe
-https://loupe.team
-info@loupe.team
-1-800-240-7042
+# Installation
+To install using the Loupe Package Manager (LPM), in an initialized Automation Studio project directory run `lpm install llhttp`. For more information about LPM, see https://loupeteam.github.io/LoupeDocs/tools/lpm.html
 
-## Change log
+# Licensing
 
- - 0.01.3 - Add basic support for chunked transfer-encoding responses
+This project is primarily licensed under the [MIT License](LICENSE), including external components also licensed under the MIT License.. Please refer to the respective files for full license texts.
 
- - 0.01.2 - Add support for HTTPS
-
- - 0.01.1 - Fix memory overrun and partial packets
-
- - 0.01.0 - Initial stable version
-
-## Documentation
-
-Documentation for this and other Loupe libraries can be found at https://loupeteam.github.io/Sandbox/libraries.html
+-picohttpparser.c
+-picohttpparser.h
