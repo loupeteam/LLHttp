@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.11-3.18)
 project(LLHttp)
 
 file(GLOB LLHttp_SRC
-"*.cpp"
-"*.c"
+    "src/Ar/LLHttp/*.cpp"
+    "src/Ar/LLHttp/*.c"
 )
 
 # add_compile_options(-fpermissive -Wno-write-strings)
