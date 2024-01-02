@@ -1,5 +1,7 @@
 # Change log
 
+ - 0.01.4 - Fix Query String parsing bug
+
  - 0.01.3 - Add basic support for chunked transfer-encoding responses
 
  - 0.01.2 - Add support for HTTPS

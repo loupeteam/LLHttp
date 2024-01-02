@@ -45,7 +45,7 @@ plcbit LLHttpUriMatch(unsigned long _a, unsigned long _b) {
 	char* b = (char*)_b;
 	
 	// /en-US/docs/Learn/
-	while(*a != '\0' && *b != '\0') {
+	while(1) {
 		
 		if(*a == '/' && *b == '/') {
 			a++;
@@ -73,8 +73,6 @@ plcbit LLHttpUriMatch(unsigned long _a, unsigned long _b) {
 		a++;
 		b++;
 	}
-	
-	return (*a == *b);
 }
 
 plcbit LLHttpAddHandler(unsigned long _ident, unsigned long pHandler) {
