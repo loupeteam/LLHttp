@@ -17,6 +17,9 @@
     },
     "dependencies": {
         "@loupeteam/librarybuilderproject": "^0.3.0",
-        "@loupeteam/llhttp": "^0.1.3"
+        "@loupeteam/llhttp": "^0.1.3",
+        "@loupeteam/ringbuflib": "^0.2.4",
+        "@loupeteam/stringext": "^0.14.4",
+        "@loupeteam/tcpcomm": "^0.10.0"
     }
 }
