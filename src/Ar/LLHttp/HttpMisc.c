@@ -73,8 +73,6 @@ plcbit LLHttpUriMatch(unsigned long _a, unsigned long _b) {
 		a++;
 		b++;
 	}
-	
-	return (*a == *b);
 }
 
 plcbit LLHttpAddHandler(unsigned long _ident, unsigned long pHandler) {
