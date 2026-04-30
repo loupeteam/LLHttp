@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <?AutomationStudio FileVersion="4.9"?>
-<Library Version="0.01.4" SubType="ANSIC" xmlns="http://br-automation.co.at/AS/Library">
+<Library Version="1.0.0" SubType="ANSIC" xmlns="http://br-automation.co.at/AS/Library">
   <Files>
     <File Description="Exported data types">Types.typ</File>
     <File Description="Exported constants">Constants.var</File>
@@ -19,9 +19,9 @@
     <File>heap.cpp</File>
   </Files>
   <Dependencies>
-    <Dependency ObjectName="TCPComm" />
-    <Dependency ObjectName="RingBufLib" />
+    <Dependency ObjectName="TCPComm" FromVersion="1.0.0" />
+    <Dependency ObjectName="RingBufLib" FromVersion="1.0.0" />
     <Dependency ObjectName="standard" />
-    <Dependency ObjectName="StringExt" />
+    <Dependency ObjectName="StringExt" FromVersion="1.0.0" />
   </Dependencies>
 </Library>

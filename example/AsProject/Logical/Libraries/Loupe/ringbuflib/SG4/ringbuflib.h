@@ -1,6 +1,6 @@
 /* Automation Studio generated header file */
 /* Do not edit ! */
-/* ringbuflib 0.02.4 */
+/* RingBufLib 1.0.0 */
 
 #ifndef _RINGBUFLIB_
 #define _RINGBUFLIB_
@@ -8,8 +8,8 @@
 extern "C" 
 {
 #endif
-#ifndef _ringbuflib_VERSION
-#define _ringbuflib_VERSION 0.02.4
+#ifndef _RingBufLib_VERSION
+#define _RingBufLib_VERSION 1.0.0
 #endif
 
 #include <bur/plctypes.h>
