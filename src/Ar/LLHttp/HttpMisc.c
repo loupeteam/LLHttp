@@ -114,8 +114,8 @@ signed long LLHttpAddHeaderField(unsigned long headerlines, unsigned long numLin
 	signed int index;
 	for (index = 0; index < numLines; index++) {
 		if(lines[index].name[0] != '\0') continue; // TODO: Maybe change header value if exists?
-		stringlcpy(lines[index].name, name, sizeof(lines[index].name)); // TODO: Maybe to lower here?
-		stringlcpy(lines[index].value, value, sizeof(lines[index].value));
+		stringlcpy((UDINT)lines[index].name, (UDINT)name, sizeof(lines[index].name)); // TODO: Maybe to lower here?
+		stringlcpy((UDINT)lines[index].value, (UDINT)value, sizeof(lines[index].value));
 		return LLHTTP_ERR_OK;
 	}
 	

@@ -1,6 +1,6 @@
 /* Automation Studio generated header file */
 /* Do not edit ! */
-/* tcpcomm 0.10.0 */
+/* TCPComm 1.0.0 */
 
 #ifndef _TCPCOMM_
 #define _TCPCOMM_
@@ -8,8 +8,8 @@
 extern "C" 
 {
 #endif
-#ifndef _tcpcomm_VERSION
-#define _tcpcomm_VERSION 0.10.0
+#ifndef _TCPComm_VERSION
+#define _TCPComm_VERSION 1.0.0
 #endif
 
 #include <bur/plctypes.h>
@@ -26,18 +26,6 @@ extern "C"
 #ifdef _SGC
 		#include "AsTCP.h"
 #endif
-
-
-/* Constants */
-#ifdef _REPLACE_CONST
- #define TCPCOMM_STRLEN_IPADDRESS 255U
- #define TCPCOMM_STRLEN_ERRORSTRING 320U
-#else
- _GLOBAL_CONST unsigned char TCPCOMM_STRLEN_IPADDRESS;
- _GLOBAL_CONST unsigned short TCPCOMM_STRLEN_ERRORSTRING;
-#endif
-
-
 
 
 /* Datatypes and datatypes of function blocks */
@@ -216,6 +204,18 @@ typedef struct TCPConnectionMgr_typ
 _BUR_PUBLIC unsigned short TCPManageConnection(struct TCPConnectionMgr_typ* t);
 _BUR_PUBLIC unsigned short TCPStreamReceive(struct TCPStream_typ* t);
 _BUR_PUBLIC unsigned short TCPStreamSend(struct TCPStream_typ* t);
+
+
+/* Constants */
+#ifdef _REPLACE_CONST
+ #define TCPCOMM_STRLEN_IPADDRESS 255U
+ #define TCPCOMM_STRLEN_ERRORSTRING 320U
+#else
+ _GLOBAL_CONST unsigned char TCPCOMM_STRLEN_IPADDRESS;
+ _GLOBAL_CONST unsigned short TCPCOMM_STRLEN_ERRORSTRING;
+#endif
+
+
 
 
 #ifdef __cplusplus

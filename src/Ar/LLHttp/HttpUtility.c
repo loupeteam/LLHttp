@@ -27,15 +27,15 @@
 void getMethodString(signed long method, unsigned long dest, unsigned long destSize) {
 	switch (method)
 	{
-		case LLHTTP_METHOD_GET: stringlcpy(dest, "GET", destSize); break;
-		case LLHTTP_METHOD_HEAD: stringlcpy(dest, "HEAD", destSize); break;
-		case LLHTTP_METHOD_POST: stringlcpy(dest, "POST", destSize); break;
-		case LLHTTP_METHOD_PUT: stringlcpy(dest, "PUT", destSize); break;
-		case LLHTTP_METHOD_DELETE: stringlcpy(dest, "DELETE", destSize); break;
-		case LLHTTP_METHOD_CONNECT: stringlcpy(dest, "CONNECT", destSize); break;
-		case LLHTTP_METHOD_OPTIONS: stringlcpy(dest, "OPTIONS", destSize); break;
-		case LLHTTP_METHOD_TRACE: stringlcpy(dest, "TRACE", destSize); break;
-		case LLHTTP_METHOD_PATCH: stringlcpy(dest, "PATCH", destSize); break;
+		case LLHTTP_METHOD_GET: stringlcpy((UDINT)dest, (UDINT)"GET", destSize); break;
+		case LLHTTP_METHOD_HEAD: stringlcpy((UDINT)dest, (UDINT)"HEAD", destSize); break;
+		case LLHTTP_METHOD_POST: stringlcpy((UDINT)dest, (UDINT)"POST", destSize); break;
+		case LLHTTP_METHOD_PUT: stringlcpy((UDINT)dest, (UDINT)"PUT", destSize); break;
+		case LLHTTP_METHOD_DELETE: stringlcpy((UDINT)dest, (UDINT)"DELETE", destSize); break;
+		case LLHTTP_METHOD_CONNECT: stringlcpy((UDINT)dest, (UDINT)"CONNECT", destSize); break;
+		case LLHTTP_METHOD_OPTIONS: stringlcpy((UDINT)dest, (UDINT)"OPTIONS", destSize); break;
+		case LLHTTP_METHOD_TRACE: stringlcpy((UDINT)dest, (UDINT)"TRACE", destSize); break;
+		case LLHTTP_METHOD_PATCH: stringlcpy((UDINT)dest, (UDINT)"PATCH", destSize); break;
 		default:
 			break;
 	}
