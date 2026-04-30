@@ -174,7 +174,7 @@ void LLHttpParse(LLHttpParse_typ* t) {
 				}	
 			}
 			else if(strncasecmp("content-type", headerLines[index].name, headerLines[index].name_len) == 0) {
-				stringlcpy(t->header.contentType, headerLines[index].value, min(headerLines[index].value_len+1, sizeof(t->header.contentType)));
+				stringlcpy((UDINT)t->header.contentType, (UDINT)headerLines[index].value, min(headerLines[index].value_len+1, sizeof(t->header.contentType)));
 			}
 			
 			copyHeaderLine(&t->header.lines[index], &headerLines[index]);
@@ -234,7 +234,7 @@ void LLHttpParse(LLHttpParse_typ* t) {
 				t->header.contentLength = brsatoi(headerLines[index].value);
 			}
 			else if(strncasecmp("content-type", headerLines[index].name, headerLines[index].name_len) == 0) {
-				stringlcpy(t->header.contentType, headerLines[index].value, min(headerLines[index].value_len+1, sizeof(t->header.contentType)));
+				stringlcpy((UDINT)t->header.contentType, (UDINT)headerLines[index].value, min(headerLines[index].value_len+1, sizeof(t->header.contentType)));
 			}
 			
 			copyHeaderLine(&t->header.lines[index], &headerLines[index]);
