@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
-#include "../LLHttpH.h"
-#include "../HttpUtility.h"
+#include "LLHttpH.h"
+#include "HttpUtility.h"
 
 #ifdef __cplusplus
 }
@@ -89,6 +89,24 @@ TEST_CASE( "Test HTTP Parser", "[LLHttp]" ) {
 		CHECK(parser.error == false);
 		CHECK(parser.header.method == LLHTTP_METHOD_GET);
 		CHECK_THAT(parser.header.uri, Catch::Matchers::Equals("/"));
+	}
+
+	SECTION( "Parse simple request with basic body" ) {
+		ParseTest("POST /api/data HTTP/1.1\r\ncontent-length: 6\r\ncontent-type: text\r\n\r\nsimple");
+		CHECK(parser.error == false);
+		CHECK(parser.header.method == LLHTTP_METHOD_POST);
+		CHECK(parser.contentPresent == true);
+		CHECK(parser.partialContent == false);
+		CHECK(parser.header.contentLength == 6);
+		CHECK_THAT((char*)parser.content, Catch::Matchers::Equals("simple"));
+		CHECK_THAT((char*)parser.header.contentType, Catch::Matchers::Equals("text"));
+	}
+
+	SECTION( "Parse request with partial body" ) {
+		ParseTest("POST /api/data HTTP/1.1\r\ncontent-length: 12\r\n\r\nsimple");
+		CHECK(parser.error == false);
+		CHECK(parser.contentPresent == true);
+		CHECK(parser.partialContent == true);
 	}
 
 	SECTION( "Parse simple response with basic body" ) {
@@ -341,5 +359,77 @@ TEST_CASE( "Test HTTP Partial Packets", "[LLHttp]") {
 				"</body>"\
 				"</html>"
 				));
+
+}
+
+static int serverCallbackCount = 0;
+static char serverCallbackBody[500];
+static LLHttpHeader_typ serverCallbackHeader;
+
+static void serverNewMessageCallback(UDINT context, LLHttpServiceLink_typ* api, LLHttpHeader_typ* header, unsigned char* data) {
+	serverCallbackCount++;
+	memcpy(&serverCallbackHeader, header, sizeof(serverCallbackHeader));
+	strncpy(serverCallbackBody, (char*)data, sizeof(serverCallbackBody)-1);
+}
+
+TEST_CASE( "Test HTTP Server POST body split across TCP segments", "[LLHttp]") {
+
+	LLHttpServer_typ server = {};
+
+	// .NET HttpClient (among others) sends the headers and the body of a POST in
+	// separate writes, so the server receives them as two TCP segments
+	const char* headerSegment =
+				"POST /api/data HTTP/1.1\r\n"\
+				"Host: plc.local\r\n"\
+				"content-type: application/json\r\n"\
+				"content-length: 27\r\n"\
+				"\r\n";
+	const char* bodySegment = "{\"name\":\"test\",\"value\":420}";
+	REQUIRE(strlen(bodySegment) == 27);
+
+	server.enable = true;
+	server.numClients = LLHTTP_MAX_NUM_CLIENTS;
+	server.bufferSize = 2000;
+
+	// First cycle initializes internals and allocates the client receive buffers
+	LLHttpServer(&server);
+
+	LLHttpServerInternalClient_typ* client = &server.internal.pClients[0];
+
+	// Register a handler for the POST request
+	serverCallbackCount = 0;
+	memset(serverCallbackBody, 0, sizeof(serverCallbackBody));
+	LLHttpHandler_typ handler = {};
+	handler.method = LLHTTP_METHOD_POST;
+	strcpy(handler.uri, "/api/data");
+	handler.newMessageCallback = (UDINT)&serverNewMessageCallback;
+	REQUIRE(LLHttpAddHandler(server.ident, (UDINT)&handler) == 0);
+
+	// Simulate an incoming connection
+	server.internal.tcpMgr.OUT.NewConnectionAvailable = 1;
+	server.internal.tcpMgr.OUT.Connection.Ident = 1;
+	server.internal.tcpMgr.OUT.Connection.UID = 1;
+
+	// Second cycle: connection is accepted and the first segment (headers only) is received
+	strcpy((char*)client->pReceiveData, headerSegment);
+	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(headerSegment);
+	LLHttpServer(&server);
+
+	CHECK(server.error == false);
+	CHECK(client->parser.partialContent == true);
+	CHECK(serverCallbackCount == 0); // Request should not be dispatched until the body arrives
+
+	// Third cycle: the second segment (body) is received at the shifted receive pointer
+	strcpy((char*)client->tcpStream.IN.PAR.pReceiveData, bodySegment);
+	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(bodySegment);
+	LLHttpServer(&server);
+
+	CHECK(server.error == false);
+	CHECK(serverCallbackCount == 1);
+	CHECK(serverCallbackHeader.method == LLHTTP_METHOD_POST);
+	CHECK_THAT(serverCallbackHeader.uri, Catch::Matchers::Equals("/api/data"));
+	CHECK(serverCallbackHeader.contentLength == strlen(bodySegment));
+	CHECK_THAT(serverCallbackBody, Catch::Matchers::Equals(bodySegment));
+	CHECK_THAT((char*)&client->pCurrentRequest->contentStart, Catch::Matchers::Equals(bodySegment));
 
 }

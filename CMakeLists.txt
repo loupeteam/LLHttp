@@ -14,9 +14,16 @@ add_definitions(-D_BUR_FORMAT_BRELF)
 add_definitions(-D_REPLACE_CONST)
 
 add_library(${PROJECT_NAME} ${LLHttp_SRC})
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+    src/Ar/LLHttp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../includes
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../includes/loupe/Includes
+)
+
 enable_testing ()
 add_subdirectory (test)
-add_subdirectory (example)
+add_subdirectory (example/CppProject)
 
 target_link_libraries(LLHttp PUBLIC TCPComm)
 target_link_libraries(LLHttp PUBLIC StringExt)

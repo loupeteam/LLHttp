@@ -38,7 +38,7 @@ void HttpShiftReceivePointer(LLHttpServerInternalClient_typ* client, unsigned lo
 }
 void HttpResetReceivePointer(LLHttpServerInternalClient_typ* client) {
 	client->tcpStream.IN.PAR.pReceiveData = client->pReceiveData;
-	client->tcpStream.IN.PAR.MaxReceiveLength = client->receiveDataSize;
+	client->tcpStream.IN.PAR.MaxReceiveLength = client->receiveDataSize - 1; // Reserve a byte for the appended null char
 }
 void HttpConnect(LLHttpServerInternalClient_typ* client, TCPConnection_Desc_typ* connection) {
 	if(!client || !connection) return;
@@ -166,8 +166,11 @@ void LLHttpServer(LLHttpServer_typ* t) {
 			}
 			else {
 				client->tcpStream.IN.CMD.AcknowledgeData = 1;
-				client->recvLength = client->tcpStream.OUT.ReceivedDataLength;
-				memset(((UDINT)client->pReceiveData)+client->recvLength+1, 0, 1); // Append null char
+				// pReceiveData is the base of the receive buffer. The TCP receive pointer has been
+				// shifted past any previously received partial data, so the total received length
+				// is the shift offset plus the newly received length
+				client->recvLength = (client->tcpStream.IN.PAR.pReceiveData - client->pReceiveData) + client->tcpStream.OUT.ReceivedDataLength;
+				memset(((UDINT)client->pReceiveData)+client->recvLength, 0, 1); // Append null char
 				// TODO: Parse 
 				client->parser.data = client->pReceiveData;
 				client->parser.dataLength = client->recvLength;
@@ -176,9 +179,9 @@ void LLHttpServer(LLHttpServer_typ* t) {
 				// TODO: Check for partial packet
 				if(client->parser.partialPacket || (client->parser.partialContent)) { // TODO: We should handle expect: 100
 					// TODO: Handle partial packets...
-					
-					// Shift pointer
-					HttpShiftReceivePointer(client, client->recvLength);
+
+					// Shift pointer past the newly received data so the next segment is appended
+					HttpShiftReceivePointer(client, client->tcpStream.OUT.ReceivedDataLength);
 				}
 				else if(client->parser.error) {
 					HttpServerSetError(t, client, client->parser.errorId);
