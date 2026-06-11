@@ -405,21 +405,24 @@ TEST_CASE( "Test HTTP Server POST body split across TCP segments", "[LLHttp]") {
 	handler.newMessageCallback = (UDINT)&serverNewMessageCallback;
 	REQUIRE(LLHttpAddHandler(server.ident, (UDINT)&handler) == 0);
 
-	// Simulate an incoming connection
-	server.internal.tcpMgr.OUT.NewConnectionAvailable = 1;
-	server.internal.tcpMgr.OUT.Connection.Ident = 1;
-	server.internal.tcpMgr.OUT.Connection.UID = 1;
-
-	// Second cycle: connection is accepted and the first segment (headers only) is received
+	// Preload the first TCP segment (headers only). The stubbed TCP layer reports received
+	// data on every cycle, so the data must already be in place when the stubbed connection
+	// manager accepts the incoming connection
 	strcpy((char*)client->pReceiveData, headerSegment);
 	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(headerSegment);
-	LLHttpServer(&server);
+
+	// Cycle until the connection is accepted and the first segment has been received
+	int cycles = 0;
+	while(!client->connected && ++cycles < 10) {
+		LLHttpServer(&server);
+	}
+	REQUIRE(client->connected == 1);
 
 	CHECK(server.error == false);
 	CHECK(client->parser.partialContent == true);
 	CHECK(serverCallbackCount == 0); // Request should not be dispatched until the body arrives
 
-	// Third cycle: the second segment (body) is received at the shifted receive pointer
+	// Next cycle: the second segment (body) is received at the shifted receive pointer
 	strcpy((char*)client->tcpStream.IN.PAR.pReceiveData, bodySegment);
 	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(bodySegment);
 	LLHttpServer(&server);

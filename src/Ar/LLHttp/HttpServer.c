@@ -170,7 +170,10 @@ void LLHttpServer(LLHttpServer_typ* t) {
 				// pReceiveData is the base of the receive buffer. The TCP receive pointer has been
 				// shifted past any previously received partial data, so the total received length
 				// is the shift offset plus the newly received length
-				client->recvLength = (client->tcpStream.IN.PAR.pReceiveData - client->pReceiveData) + client->tcpStream.OUT.ReceivedDataLength;
+				client->recvLength = client->tcpStream.OUT.ReceivedDataLength;
+				if(client->tcpStream.IN.PAR.pReceiveData > client->pReceiveData) {
+					client->recvLength += client->tcpStream.IN.PAR.pReceiveData - client->pReceiveData;
+				}
 				memset(((UDINT)client->pReceiveData)+client->recvLength, 0, 1); // Append null char
 				// TODO: Parse 
 				client->parser.data = client->pReceiveData;
