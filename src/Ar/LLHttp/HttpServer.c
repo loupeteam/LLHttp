@@ -32,9 +32,15 @@
 
 #define min(a,b) (((a)<(b))?(a):(b))
 
-void HttpShiftReceivePointer(LLHttpServerInternalClient_typ* client, unsigned long bytes) {
-	client->tcpStream.IN.PAR.pReceiveData += bytes;
-	client->tcpStream.IN.PAR.MaxReceiveLength -= bytes; // TODO: Dont allow rollover
+BOOL HttpShiftReceivePointer(LLHttpServerInternalClient_typ* client, unsigned long bytes) {
+	if( ( (int)client->tcpStream.IN.PAR.MaxReceiveLength - bytes ) > 0 ) {
+		client->tcpStream.IN.PAR.pReceiveData += bytes;
+		client->tcpStream.IN.PAR.MaxReceiveLength -= bytes;
+		return 1;
+	}
+	else {
+		return 0;
+	}
 }
 void HttpResetReceivePointer(LLHttpServerInternalClient_typ* client) {
 	client->tcpStream.IN.PAR.pReceiveData = client->pReceiveData;
@@ -185,7 +191,13 @@ void LLHttpServer(LLHttpServer_typ* t) {
 					// TODO: Handle partial packets...
 
 					// Shift pointer past the newly received data so the next segment is appended
-					HttpShiftReceivePointer(client, client->tcpStream.OUT.ReceivedDataLength);
+					if(HttpShiftReceivePointer(client, client->tcpStream.OUT.ReceivedDataLength) == 0) {
+						// Request does not fit in the receive buffer. Drop the connection like the
+						// client does, rather than letting MaxReceiveLength roll over and the TCP
+						// layer overrun the buffer
+						HttpServerSetError(t, client, LLHTTP_ERR_PACKET_SIZE_TOO_BIG);
+						HttpDisconnect(client);
+					}
 				}
 				else if(client->parser.error) {
 					HttpServerSetError(t, client, client->parser.errorId);
@@ -323,7 +335,8 @@ void LLHttpServer(LLHttpServer_typ* t) {
 		
 	}
 	
-	memcpy(&t->internal.clients, t->internal.pClients, sizeof(t->internal.clients)); // For debug
+	// For debug. pClients only holds numClients elements, so copy no more than that (and no more than the debug array holds)
+	memcpy(&t->internal.clients, t->internal.pClients, min(t->internal.numClients, LLHTTP_MAX_NUM_CLIENTS) * sizeof(LLHttpServerInternalClient_typ));
 	
 	// Set output
 	t->ident = &t->internal.api;

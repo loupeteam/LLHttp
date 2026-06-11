@@ -436,3 +436,95 @@ TEST_CASE( "Test HTTP Server POST body split across TCP segments", "[LLHttp]") {
 	CHECK_THAT((char*)&client->pCurrentRequest->contentStart, Catch::Matchers::Equals(bodySegment));
 
 }
+
+TEST_CASE( "Test HTTP Server oversized request does not roll over receive window", "[LLHttp]") {
+
+	LLHttpServer_typ server = {};
+
+	// A request whose body can never fit in the receive buffer. The server should error
+	// out with LLHTTP_ERR_PACKET_SIZE_TOO_BIG instead of letting MaxReceiveLength roll
+	// over (UDINT) and the TCP layer overrun the buffer
+	const char* headerSegment =
+				"POST /api/data HTTP/1.1\r\n"\
+				"Host: plc.local\r\n"\
+				"content-type: application/octet-stream\r\n"\
+				"content-length: 10000000\r\n"\
+				"\r\n";
+
+	server.enable = true;
+	server.numClients = LLHTTP_MAX_NUM_CLIENTS;
+	server.bufferSize = 2000;
+
+	// First cycle initializes internals and allocates the client receive buffers
+	LLHttpServer(&server);
+
+	LLHttpServerInternalClient_typ* client = &server.internal.pClients[0];
+
+	// Preload the header segment so it is in place when the stubbed connection manager
+	// accepts the incoming connection
+	strcpy((char*)client->pReceiveData, headerSegment);
+	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(headerSegment);
+
+	int cycles = 0;
+	while(!client->connected && ++cycles < 10) {
+		LLHttpServer(&server);
+	}
+	REQUIRE(client->connected == 1);
+	CHECK(server.error == false);
+	CHECK(client->parser.partialContent == true);
+
+	// Keep feeding body segments until the buffer is exhausted. Like the real TCP layer,
+	// never deliver more than the advertised MaxReceiveLength in one segment
+	cycles = 0;
+	while(!server.error && ++cycles < 1000) {
+		UDINT chunk = client->tcpStream.IN.PAR.MaxReceiveLength < 1000 ? client->tcpStream.IN.PAR.MaxReceiveLength : 1000;
+		memset((char*)client->tcpStream.IN.PAR.pReceiveData, 'a', chunk);
+		client->tcpStream.Internal.FUB.Receive.recvlen = chunk;
+		LLHttpServer(&server);
+	}
+
+	CHECK(server.error == true);
+	CHECK(server.errorId == LLHTTP_ERR_PACKET_SIZE_TOO_BIG);
+	CHECK(client->errorId == LLHTTP_ERR_PACKET_SIZE_TOO_BIG);
+	CHECK(client->connected == 0); // Connection is dropped, like the client side does
+
+	// The receive window must never extend past the allocated buffer
+	CHECK(client->tcpStream.IN.PAR.MaxReceiveLength < client->receiveDataSize);
+	CHECK(client->tcpStream.IN.PAR.pReceiveData + client->tcpStream.IN.PAR.MaxReceiveLength
+			<= client->pReceiveData + client->receiveDataSize);
+
+}
+
+TEST_CASE( "Test HTTP Server debug client copy respects allocation size", "[LLHttp]") {
+
+	LLHttpServer_typ server = {};
+
+	server.enable = true;
+	server.numClients = 2; // Fewer than the debug array holds (LLHTTP_MAX_NUM_CLIENTS)
+	server.bufferSize = 2000;
+
+	// First cycle initializes internals; pClients is allocated with only numClients elements
+	LLHttpServer(&server);
+
+	// Plant a sentinel in the debug array beyond numClients. If the debug copy reads a full
+	// sizeof(clients) from the 2-element allocation, it reads past the heap block and
+	// overwrites the sentinel with whatever lives there
+	memset(&server.internal.clients[2], 0xAA, sizeof(LLHttpServerInternalClient_typ) * (LLHTTP_MAX_NUM_CLIENTS - 2));
+
+	LLHttpServer(&server);
+
+	// The first numClients elements mirror the allocation...
+	CHECK(memcmp(&server.internal.clients[0], server.internal.pClients, sizeof(LLHttpServerInternalClient_typ) * 2) == 0);
+
+	// ...and elements beyond numClients are untouched
+	const unsigned char* sentinel = (const unsigned char*)&server.internal.clients[2];
+	bool sentinelIntact = true;
+	for(size_t k = 0; k < sizeof(LLHttpServerInternalClient_typ) * (LLHTTP_MAX_NUM_CLIENTS - 2); k++) {
+		if(sentinel[k] != 0xAA) {
+			sentinelIntact = false;
+			break;
+		}
+	}
+	CHECK(sentinelIntact);
+
+}
