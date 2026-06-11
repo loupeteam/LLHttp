@@ -214,9 +214,9 @@ TEST_CASE( "Test HTTP Build Response", "[LLHttp]" ) {
 		// HTTP/1.1 200 OK\r\ncontent-length: 6\r\ncontent-type: text\r\n\r\nsimple
 		CHECK_THAT(buffer, Catch::Matchers::StartsWith("HTTP/1.1 200 OK"));
 		CHECK_THAT(buffer, Catch::Matchers::EndsWith("\r\n\r\nsimple"));
-		CHECK_THAT(buffer, Catch::Matchers::Contains(contentType));
-		CHECK_THAT(buffer, Catch::Matchers::Contains(contentLength));
-		CHECK_THAT(buffer, Catch::Matchers::Contains(date));
+		CHECK_THAT(buffer, Catch::Matchers::ContainsSubstring(contentType));
+		CHECK_THAT(buffer, Catch::Matchers::ContainsSubstring(contentLength));
+		CHECK_THAT(buffer, Catch::Matchers::ContainsSubstring(date));
 	}
 }
 
