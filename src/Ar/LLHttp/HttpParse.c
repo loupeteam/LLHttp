@@ -95,6 +95,9 @@ size_t ftoa(float n, char* res, int afterpoint)
 #ifndef brsatoi
 #define brsatoi(a) atoi((char*)a)
 #endif
+#ifndef brsstrlen
+#define brsstrlen(a) strlen((char*)a)
+#endif
 
 #define min(a,b) (((a)<(b))?(a):(b))
 
