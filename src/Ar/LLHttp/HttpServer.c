@@ -75,6 +75,7 @@ void HttpServerSetError(LLHttpServer_typ* t, LLHttpServerInternalClient_typ* cli
 
 void LLHttpServerInit(LLHttpServer_typ* t) {
 	TMP_alloc(sizeof(LLHttpServerInternalClient_typ)*t->numClients, &t->internal.pClients);
+	memset(t->internal.pClients, 0, sizeof(LLHttpServerInternalClient_typ)*t->numClients); // TMP_alloc memory is not initialized
 	t->internal.numClients = t->numClients;
 	int index;
 	for (index = 0; index < t->internal.numClients; index++) {
