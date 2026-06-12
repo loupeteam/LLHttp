@@ -361,17 +361,18 @@ signed long LLHttpBuildResponse(unsigned long data, unsigned long _response, uns
 	LLHttpServiceResponse_typ* response = _response;
 	unsigned long destLen = 0;
 	UtcDTGetTime_typ utcGetTime = {};
-	
+	unsigned long status = response->status ? response->status : 200; // Default to 200 OK when the application leaves status at 0
+
 	// Clear dest
 	dest[0] = '\0';
-	
+
 	// Status
 	strcat(dest, "HTTP/");
 	strcat(dest, "1.1 "); // TODO: User version here
-	brsitoa(response->status, (UDINT)&temp);
+	brsitoa(status, (UDINT)&temp);
 	strcat(dest, temp);
 	strcat(dest, " ");
-	strcat(dest, HttpStatusPhrase(response->status));
+	strcat(dest, HttpStatusPhrase(status));
 	appendNewLine(dest);
 	
 	// Date
@@ -406,11 +407,16 @@ signed long LLHttpBuildResponse(unsigned long data, unsigned long _response, uns
 	
 	
 	// Content-Length
-	// Optional
 	if(response->payloadLength) {
 		strcat(dest, "content-length: ");
 		brsitoa(response->payloadLength, (UDINT)&temp);
 		strcat(dest, temp);
+		appendNewLine(dest);
+	}
+	else if(status >= 200 && status != 204 && status != 304) {
+		// An explicit zero keeps keep-alive clients from waiting for a body that
+		// never comes. 1xx, 204 and 304 must not carry a content-length at all
+		strcat(dest, "content-length: 0");
 		appendNewLine(dest);
 	}
 	
