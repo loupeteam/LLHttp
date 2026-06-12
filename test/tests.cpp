@@ -24,6 +24,7 @@ extern "C" {
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark_all.hpp>
 #include <catch2/matchers/catch_matchers_all.hpp>
+#include <catch2/generators/catch_generators_all.hpp>
 
 
 using namespace std;
@@ -73,6 +74,18 @@ TEST_CASE( "Test HTTP URI Match", "[LLHttp]" ) {
 	testHttpUriMatch("/files/test.cpp", "/files/deeper/test.cpp", false);
 	testHttpUriMatch("/files/test.cpp", "/other", false);
 	testHttpUriMatch("/files/test.cpp", "/", false);
+
+	}
+	SECTION( "Should only ignore query parameters when the full path matched" ) {
+
+	testHttpUriMatch("/api/brew", "/api/brew?durationS=180", true);
+	testHttpUriMatch("/api/brew/abort", "/api/brew?durationS=180", false);
+	testHttpUriMatch("/api/brew", "/api/brew/abort?x=1", false);
+	testHttpUriMatch("/api/brew/abort", "/api/brew/abort?x=1", true);
+	testHttpUriMatch("/api/brewery", "/api/brew?x=1", false);
+	testHttpUriMatch("/api/brew", "/api/brewery?x=1", false);
+	testHttpUriMatch("/files/*", "/files/test?x=1", true);
+	testHttpUriMatch("/files/**", "/files/deeper/test?x=1", true);
 
 	}
 
@@ -217,6 +230,42 @@ TEST_CASE( "Test HTTP Build Response", "[LLHttp]" ) {
 		CHECK_THAT(buffer, Catch::Matchers::ContainsSubstring(contentType));
 		CHECK_THAT(buffer, Catch::Matchers::ContainsSubstring(contentLength));
 		CHECK_THAT(buffer, Catch::Matchers::ContainsSubstring(date));
+	}
+
+	SECTION("Build Http Response with non-200 status") {
+		strcpy(response.uri, "/");
+		response.pPayload = (UDINT)&"conflict";
+		response.payloadLength = strlen((char*)response.pPayload);
+		response.status = 409;
+		LLHttpBuildResponse((UDINT)&buffer, (UDINT)&response, sizeof(buffer), &bufferLen);
+		CHECK_THAT(buffer, Catch::Matchers::StartsWith("HTTP/1.1 409 Conflict\r\n"));
+	}
+
+	SECTION("Build Http Response defaults status 0 to 200 OK") {
+		strcpy(response.uri, "/");
+		response.pPayload = (UDINT)&"simple";
+		response.payloadLength = strlen((char*)response.pPayload);
+		response.status = 0; // Application never set the status input
+		LLHttpBuildResponse((UDINT)&buffer, (UDINT)&response, sizeof(buffer), &bufferLen);
+		CHECK_THAT(buffer, Catch::Matchers::StartsWith("HTTP/1.1 200 OK\r\n"));
+	}
+
+	SECTION("Build Http Response with empty payload includes content-length: 0") {
+		strcpy(response.uri, "/");
+		response.status = 202;
+		LLHttpBuildResponse((UDINT)&buffer, (UDINT)&response, sizeof(buffer), &bufferLen);
+		CHECK_THAT(buffer, Catch::Matchers::StartsWith("HTTP/1.1 202 Accepted\r\n"));
+		const std::string contentLengthZero{ "\r\ncontent-length: 0\r\n" };
+		CHECK_THAT(buffer, Catch::Matchers::ContainsSubstring(contentLengthZero));
+		CHECK_THAT(buffer, Catch::Matchers::EndsWith("\r\n\r\n"));
+	}
+
+	SECTION("Build Http Response with 204 status omits content-length") {
+		strcpy(response.uri, "/");
+		response.status = 204; // RFC 9110: no content-length on 204
+		LLHttpBuildResponse((UDINT)&buffer, (UDINT)&response, sizeof(buffer), &bufferLen);
+		CHECK_THAT(buffer, Catch::Matchers::StartsWith("HTTP/1.1 204 No Content\r\n"));
+		CHECK_THAT(buffer, !Catch::Matchers::ContainsSubstring(std::string{"content-length"}));
 	}
 }
 
@@ -370,6 +419,152 @@ static void serverNewMessageCallback(UDINT context, LLHttpServiceLink_typ* api, 
 	serverCallbackCount++;
 	memcpy(&serverCallbackHeader, header, sizeof(serverCallbackHeader));
 	strncpy(serverCallbackBody, (char*)data, sizeof(serverCallbackBody)-1);
+}
+
+TEST_CASE( "Test HTTP Server response honors the LLHttpResponse status input", "[LLHttp]") {
+
+	struct StatusCase { UDINT status; const char* statusLine; };
+	StatusCase c = GENERATE(
+				StatusCase{200, "HTTP/1.1 200 OK\r\n"},
+				StatusCase{202, "HTTP/1.1 202 Accepted\r\n"},
+				StatusCase{204, "HTTP/1.1 204 No Content\r\n"},
+				StatusCase{400, "HTTP/1.1 400 Bad Request\r\n"},
+				StatusCase{404, "HTTP/1.1 404 Not Found\r\n"},
+				StatusCase{409, "HTTP/1.1 409 Conflict\r\n"},
+				StatusCase{500, "HTTP/1.1 500 Internal Server Error\r\n"},
+				StatusCase{0,   "HTTP/1.1 200 OK\r\n"}); // Status left at 0 defaults to 200
+
+	CAPTURE(c.status);
+
+	LLHttpServer_typ server = {};
+	server.enable = true;
+	server.numClients = LLHTTP_MAX_NUM_CLIENTS;
+	server.bufferSize = 2000;
+
+	// First cycle initializes internals and publishes server.ident
+	LLHttpServer(&server);
+
+	LLHttpServerInternalClient_typ* client = &server.internal.pClients[0];
+
+	// Service FB listening for the request, like a PLC task would set it up
+	LLHttpResponse_typ fbResp = {};
+	fbResp.ident = server.ident;
+	fbResp.method = LLHTTP_METHOD_POST;
+	strcpy(fbResp.uri, "/api/brew");
+	fbResp.enable = true;
+	LLHttpResponse(&fbResp); // Registers the handler
+
+	const char* request =
+				"POST /api/brew HTTP/1.1\r\n"\
+				"Host: plc.local\r\n"\
+				"content-type: application/json\r\n"\
+				"content-length: 13\r\n"\
+				"\r\n"\
+				"{\"brew\":true}";
+
+	// Preload the request so it is in place when the stubbed connection manager accepts
+	strcpy((char*)client->pReceiveData, request);
+	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(request);
+
+	// Cycle until the connection is accepted and the request dispatched to the service FB
+	int cycles = 0;
+	while(!(client->connected && fbResp.newRequest) && ++cycles < 10) {
+		LLHttpServer(&server);
+		LLHttpResponse(&fbResp);
+	}
+	REQUIRE(client->connected == 1);
+	REQUIRE(fbResp.newRequest == 1);
+
+	// Respond like an application would: status and send set in the same cycle,
+	// with the FB called at the bottom of the cyclic
+	const char* body = "{\"queued\":true}";
+	fbResp.status = c.status;
+	fbResp.pContent = (UDINT)body;
+	fbResp.contentLength = strlen(body);
+	fbResp.send = true;
+	LLHttpResponse(&fbResp); // Queues the response
+
+	// Next server cycle dequeues the response, builds the packet, and sends it
+	LLHttpServer(&server);
+
+	CHECK_THAT((char*)client->pSendData, Catch::Matchers::StartsWith(c.statusLine));
+	CHECK_THAT((char*)client->pSendData, Catch::Matchers::EndsWith(body));
+
+	// FB reports completion on its next call
+	LLHttpResponse(&fbResp);
+	CHECK(fbResp.done == 1);
+	CHECK(fbResp.error == 0);
+
+}
+
+TEST_CASE( "Test HTTP Server query string request dispatches only to the matching route", "[LLHttp]") {
+
+	// Regression for custom status codes arriving as 200 at the client: a request
+	// with a query string ('POST /api/brew?durationS=180') used to match every
+	// handler whose URI is a prefix of the request path ('/api/brew/abort' too).
+	// Both routes then answered the same request and whichever response was queued
+	// first won the wire - typically a 200 that masked the real route's 202/409
+
+	LLHttpServer_typ server = {};
+	server.enable = true;
+	server.numClients = LLHTTP_MAX_NUM_CLIENTS;
+	server.bufferSize = 2000;
+
+	// First cycle initializes internals and publishes server.ident
+	LLHttpServer(&server);
+
+	LLHttpServerInternalClient_typ* client = &server.internal.pClients[0];
+
+	LLHttpResponse_typ fbBrew = {};
+	fbBrew.ident = server.ident;
+	fbBrew.method = LLHTTP_METHOD_POST;
+	strcpy(fbBrew.uri, "/api/brew");
+	fbBrew.enable = true;
+	LLHttpResponse(&fbBrew);
+
+	LLHttpResponse_typ fbAbort = {};
+	fbAbort.ident = server.ident;
+	fbAbort.method = LLHTTP_METHOD_POST;
+	strcpy(fbAbort.uri, "/api/brew/abort");
+	fbAbort.enable = true;
+	LLHttpResponse(&fbAbort);
+
+	const char* request =
+				"POST /api/brew?durationS=180&batchSize=50 HTTP/1.1\r\n"\
+				"Host: plc.local\r\n"\
+				"\r\n";
+
+	strcpy((char*)client->pReceiveData, request);
+	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(request);
+
+	int cycles = 0;
+	while(!(client->connected && fbBrew.newRequest) && ++cycles < 10) {
+		LLHttpServer(&server);
+		LLHttpResponse(&fbBrew);
+		LLHttpResponse(&fbAbort);
+	}
+	REQUIRE(client->connected == 1);
+	REQUIRE(fbBrew.newRequest == 1);
+
+	// The sibling route must not see the request
+	CHECK(fbAbort.newRequest == 0);
+
+	// The abort route answers 200 immediately, the way a one-cycle route state
+	// machine would. If it was wrongly dispatched, this 200 is queued ahead of
+	// the brew route's 202 and is what the client reads
+	fbAbort.status = 200;
+	fbAbort.send = true;
+	LLHttpResponse(&fbAbort);
+
+	// The brew route accepts the command with a 202
+	fbBrew.status = 202;
+	fbBrew.send = true;
+	LLHttpResponse(&fbBrew);
+
+	LLHttpServer(&server);
+
+	CHECK_THAT((char*)client->pSendData, Catch::Matchers::StartsWith("HTTP/1.1 202 Accepted\r\n"));
+
 }
 
 TEST_CASE( "Test HTTP Server POST body split across TCP segments", "[LLHttp]") {
