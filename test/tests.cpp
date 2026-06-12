@@ -76,6 +76,18 @@ TEST_CASE( "Test HTTP URI Match", "[LLHttp]" ) {
 	testHttpUriMatch("/files/test.cpp", "/", false);
 
 	}
+	SECTION( "Should only ignore query parameters when the full path matched" ) {
+
+	testHttpUriMatch("/api/brew", "/api/brew?durationS=180", true);
+	testHttpUriMatch("/api/brew/abort", "/api/brew?durationS=180", false);
+	testHttpUriMatch("/api/brew", "/api/brew/abort?x=1", false);
+	testHttpUriMatch("/api/brew/abort", "/api/brew/abort?x=1", true);
+	testHttpUriMatch("/api/brewery", "/api/brew?x=1", false);
+	testHttpUriMatch("/api/brew", "/api/brewery?x=1", false);
+	testHttpUriMatch("/files/*", "/files/test?x=1", true);
+	testHttpUriMatch("/files/**", "/files/deeper/test?x=1", true);
+
+	}
 
 	#undef testHttpUriMatch
 }
@@ -454,12 +466,13 @@ TEST_CASE( "Test HTTP Server response honors the LLHttpResponse status input", "
 	strcpy((char*)client->pReceiveData, request);
 	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(request);
 
-	// Cycle until the request is dispatched to the service FB
+	// Cycle until the connection is accepted and the request dispatched to the service FB
 	int cycles = 0;
-	while(!fbResp.newRequest && ++cycles < 10) {
+	while(!(client->connected && fbResp.newRequest) && ++cycles < 10) {
 		LLHttpServer(&server);
 		LLHttpResponse(&fbResp);
 	}
+	REQUIRE(client->connected == 1);
 	REQUIRE(fbResp.newRequest == 1);
 
 	// Respond like an application would: status and send set in the same cycle,
@@ -481,6 +494,76 @@ TEST_CASE( "Test HTTP Server response honors the LLHttpResponse status input", "
 	LLHttpResponse(&fbResp);
 	CHECK(fbResp.done == 1);
 	CHECK(fbResp.error == 0);
+
+}
+
+TEST_CASE( "Test HTTP Server query string request dispatches only to the matching route", "[LLHttp]") {
+
+	// Regression for custom status codes arriving as 200 at the client: a request
+	// with a query string ('POST /api/brew?durationS=180') used to match every
+	// handler whose URI is a prefix of the request path ('/api/brew/abort' too).
+	// Both routes then answered the same request and whichever response was queued
+	// first won the wire - typically a 200 that masked the real route's 202/409
+
+	LLHttpServer_typ server = {};
+	server.enable = true;
+	server.numClients = LLHTTP_MAX_NUM_CLIENTS;
+	server.bufferSize = 2000;
+
+	// First cycle initializes internals and publishes server.ident
+	LLHttpServer(&server);
+
+	LLHttpServerInternalClient_typ* client = &server.internal.pClients[0];
+
+	LLHttpResponse_typ fbBrew = {};
+	fbBrew.ident = server.ident;
+	fbBrew.method = LLHTTP_METHOD_POST;
+	strcpy(fbBrew.uri, "/api/brew");
+	fbBrew.enable = true;
+	LLHttpResponse(&fbBrew);
+
+	LLHttpResponse_typ fbAbort = {};
+	fbAbort.ident = server.ident;
+	fbAbort.method = LLHTTP_METHOD_POST;
+	strcpy(fbAbort.uri, "/api/brew/abort");
+	fbAbort.enable = true;
+	LLHttpResponse(&fbAbort);
+
+	const char* request =
+				"POST /api/brew?durationS=180&batchSize=50 HTTP/1.1\r\n"\
+				"Host: plc.local\r\n"\
+				"\r\n";
+
+	strcpy((char*)client->pReceiveData, request);
+	client->tcpStream.Internal.FUB.Receive.recvlen = strlen(request);
+
+	int cycles = 0;
+	while(!(client->connected && fbBrew.newRequest) && ++cycles < 10) {
+		LLHttpServer(&server);
+		LLHttpResponse(&fbBrew);
+		LLHttpResponse(&fbAbort);
+	}
+	REQUIRE(client->connected == 1);
+	REQUIRE(fbBrew.newRequest == 1);
+
+	// The sibling route must not see the request
+	CHECK(fbAbort.newRequest == 0);
+
+	// The abort route answers 200 immediately, the way a one-cycle route state
+	// machine would. If it was wrongly dispatched, this 200 is queued ahead of
+	// the brew route's 202 and is what the client reads
+	fbAbort.status = 200;
+	fbAbort.send = true;
+	LLHttpResponse(&fbAbort);
+
+	// The brew route accepts the command with a 202
+	fbBrew.status = 202;
+	fbBrew.send = true;
+	LLHttpResponse(&fbBrew);
+
+	LLHttpServer(&server);
+
+	CHECK_THAT((char*)client->pSendData, Catch::Matchers::StartsWith("HTTP/1.1 202 Accepted\r\n"));
 
 }
 

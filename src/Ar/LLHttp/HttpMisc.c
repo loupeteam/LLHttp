@@ -53,7 +53,10 @@ plcbit LLHttpUriMatch(unsigned long _a, unsigned long _b) {
 		}
 		
 		if(*b == '?') { // We do not support matching parameters
-			return 1; // We have matched everything but the parameters
+			// The request path ends at the query string. This is only a match if the
+			// handler pattern is exhausted too, otherwise '/api/brew?x=1' would match
+			// a handler listening on '/api/brew/abort'
+			return (*a == '\0' || *a == '?');
 		}
 		
 		if(*a == '*') { // Match next element
