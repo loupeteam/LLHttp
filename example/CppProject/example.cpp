@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
-#include "../LLHttpH.h"
-#include "../HttpUtility.h"
+#include "LLHttpH.h"
+#include "HttpUtility.h"
 
 #ifdef __cplusplus
 }

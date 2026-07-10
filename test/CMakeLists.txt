@@ -21,7 +21,7 @@ Include(FetchContent)
 FetchContent_Declare(
 Catch2
 GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-GIT_TAG        v3.0.0-preview3
+GIT_TAG        v3.4.0
 )
 
 # set(CMAKE_BUILD_TYPE Debug)
@@ -33,6 +33,7 @@ target_link_libraries(LLHttp_test PRIVATE Catch2::Catch2WithMain)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
+file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/report)
 catch_discover_tests(LLHttp_test OUTPUT_DIR ${PROJECT_SOURCE_DIR}/report)
 
 target_include_directories(LLHttp_test PUBLIC ${PROJECT_SOURCE_DIR}/../../includes/)

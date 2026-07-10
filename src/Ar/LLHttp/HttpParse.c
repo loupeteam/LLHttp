@@ -95,6 +95,9 @@ size_t ftoa(float n, char* res, int afterpoint)
 #ifndef brsatoi
 #define brsatoi(a) atoi((char*)a)
 #endif
+#ifndef brsstrlen
+#define brsstrlen(a) strlen((char*)a)
+#endif
 
 #define min(a,b) (((a)<(b))?(a):(b))
 
@@ -239,13 +242,21 @@ void LLHttpParse(LLHttpParse_typ* t) {
 			
 			copyHeaderLine(&t->header.lines[index], &headerLines[index]);
 		}
-		
-		
+
+		// We have content if content length is non-zero
+		// Its possible that we still do not have content, e.g. if the headers lied. We do not have anyway to know this
+		// See spec at https://greenbytes.de/tech/webdav/rfc7230.html#message.body
+		if(t->header.contentLength != 0) {
+			// We have content (maybe ;)
+			t->contentPresent = 1;
+			t->partialContent = (returnValue+t->header.contentLength > t->dataLength);
+		}
+
 	}
-	
-	
+
+
 	// Parse first line
-	
+
 }
 
 signed short LLHttpgetHeaderIndex(unsigned long headerlines, unsigned long name, unsigned long value) {
